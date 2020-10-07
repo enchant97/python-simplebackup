@@ -1,0 +1,5 @@
+*.txt   text
+*.md    text
+*.py    text diff=python
+
+*       text=auto
