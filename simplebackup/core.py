@@ -16,7 +16,9 @@ def search_included(paths_to_scan: tuple, callback_progress=None):
         :param paths_to_scan: tuple of Path obj of the
                               folder paths to walk
         :param callback_progress: func to call when a
-                                  file has been found
+                                  file has been found,
+                                  callback must accept one argument
+                                  for whether it has finished search
         :return: yields each new filepath found as Path obj
     """
     for top in paths_to_scan:
@@ -27,6 +29,8 @@ def search_included(paths_to_scan: tuple, callback_progress=None):
                         # call progress callback to say file has been found
                         callback_progress()
                     yield Path(root).joinpath(file)
+    if callback_progress:
+        callback_progress(True)
 
 def copy_file(file_path: Path, backup_root: Path, callback_progress=None):
     """
@@ -105,11 +109,11 @@ def create_backup_folder(root_backup_path: Path, versions_to_keep=2):
     """
 
     prev_backups = [i for i in find_prev_backups(root_backup_path)]
-    if (versions_to_keep > -1) and (len(prev_backups) >= versions_to_keep):
+    if (versions_to_keep > 0) and (len(prev_backups) >= versions_to_keep):
         prev_backups = sorted(prev_backups, reverse=True)
-        difference = len(prev_backups) - versions_to_keep
+        difference = (len(prev_backups) - versions_to_keep) + 1
         for i in range(difference):
-            prev_backups[i - 1].rmdir()
+            shutil.rmtree(prev_backups[i - 1])
 
     backup_path = root_backup_path / datetime.utcnow().strftime(BACKUP_DATESTAMP_UTC)
     backup_path.mkdir(parents=True, exist_ok=True)
