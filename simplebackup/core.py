@@ -43,6 +43,10 @@ def copy_file(file_path: Path, backup_root: Path, callback_progress=None):
     """
     # the root
     to_path = backup_root
+    # add drive letter to backup folder
+    if file_path.drive.find(":"):
+        # if drive has a letter add it to the backup folder
+        to_path = to_path / file_path.drive.replace(":", "")
     # if the path has further folders
     file_parts = file_path.parts
     if len(file_parts) > 3:
@@ -72,10 +76,6 @@ def copy_files(backup_folder: Path, file_paths, callback_progress=None):
                                   file has been copied,
                                   will be called from a thread
     """
-    if backup_folder.drive.find(":"):
-        # if drive has a letter add it to the backup folder
-        backup_folder = backup_folder / backup_folder.drive.replace(":", "")
-
     with ThreadPoolExecutor(thread_name_prefix="copythread") as tpe:
         tpe.map(
             partial(copy_file, backup_root=backup_folder, callback_progress=callback_progress),
