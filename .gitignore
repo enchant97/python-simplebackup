@@ -4,3 +4,7 @@
 [Tt]humbs.db
 ~$*
 .pytest_cache
+/dist/
+/build/
+/*.egg-info
+/*.egg
