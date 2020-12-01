@@ -1,6 +1,8 @@
 from pathlib import Path
 
 from . import __version__
+from .config import Config_Handler
+from .const import APP_CONFIG_PATH
 from .core import copy_files, create_backup_folder, search_included
 
 
@@ -8,9 +10,11 @@ class CLI:
     def __init__(self):
         self.__files_found = 0
         self.__files_backed_up = 0
-        self.__versions_to_keep = 2
-        self.__paths_to_backup = []
-        self.__backup_path = None
+
+        self.__app_config = Config_Handler(APP_CONFIG_PATH)
+        self.__versions_to_keep = self.__app_config.get_versions_to_keep()
+        self.__paths_to_backup = self.__app_config.get_included_folders()
+        self.__backup_path = self.__app_config.get_backup_path()
 
     def show_welcome(self):
         print("Simple Backup CLI Mode | V" + __version__)
@@ -25,6 +29,7 @@ class CLI:
                 else:
                     path = Path(path).resolve(strict=True)
                     self.__paths_to_backup.append(path)
+                    self.__app_config.set_included_folders(self.__paths_to_backup)
             except FileNotFoundError:
                 print("That path does not seem to exit!")
 
@@ -36,6 +41,7 @@ class CLI:
                     break
                 path = Path(path).resolve(strict=True)
                 self.__backup_path = path
+                self.__app_config.set_backup_path(self.__backup_path)
             except FileNotFoundError:
                 print("That path does not seem to exit!")
 
@@ -43,6 +49,7 @@ class CLI:
         while True:
             try:
                 self.__versions_to_keep = int(input("Enter Number Of Versions To Keep: "))
+                self.__app_config.set_versions_to_keep(self.__versions_to_keep)
                 break
             except ValueError:
                 print("Invalid Input!")

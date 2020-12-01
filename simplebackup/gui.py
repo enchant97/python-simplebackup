@@ -1,10 +1,12 @@
 from pathlib import Path
 from threading import Thread
-from tkinter import (DISABLED, NORMAL, SUNKEN, Button, Label, Tk, W, X,
-                     filedialog, messagebox, BOTTOM)
+from tkinter import (BOTTOM, DISABLED, NORMAL, SUNKEN, Button, Label, Tk, W, X,
+                     filedialog, messagebox)
 from tkinter.ttk import Progressbar
 
 from . import __version__
+from .config import Config_Handler
+from .const import APP_CONFIG_PATH
 from .core import copy_files, create_backup_folder, search_included
 
 
@@ -22,6 +24,7 @@ class BackupThread(Thread):
         backup_folder = create_backup_folder(self.__backup_location, self.__versions_to_keep)
         copy_files(backup_folder, files_to_backup, self.__copy_callback)
 
+
 class TkApp(Tk):
     def __init__(self):
         super().__init__()
@@ -31,18 +34,29 @@ class TkApp(Tk):
         self.__files_found = 0
         self.__files_copied = 0
 
-        self.__versions_to_keep = 2
-        self.__included_folders = []
-        self.__backup_location = None
+        self.__app_config = Config_Handler(APP_CONFIG_PATH)
+        self.__versions_to_keep = self.__app_config.get_versions_to_keep()
+        self.__included_folders = self.__app_config.get_included_folders()
+        self.__backup_location = self.__app_config.get_backup_path()
 
         self.__inc_folder_bnt = Button(self, text="Add Folder", command=self.add_included_folder)
         self.__included_folders_l = Label(self)
+        self.update_included_folders_label()
         self.__backup_to_bnt = Button(self, text="Backup Folder", command=self.set_backup_folder)
-        self.__backup_folder_l = Label(self)
+        self.__backup_folder_l = Label(self, text=str(self.__backup_location))
         self.__backup_start_bnt = Button(self, text="Start Backup", command=self.start_backup)
         self.__progress = Progressbar(self)
         self.__statusbar = Label(self, relief=SUNKEN, anchor=W)
         self.layout()
+
+    def update_included_folders_label(self):
+        """
+        update the included folders label with new included folders
+        """
+        if self.__included_folders:
+            self.__included_folders_l.config(text="; ".join(map(str, self.__included_folders)))
+        else:
+            self.__included_folders_l.config(text="None")
 
     def add_included_folder(self):
         folder = filedialog.askdirectory(initialdir="/", title="Select Folder To Backup")
@@ -50,15 +64,19 @@ class TkApp(Tk):
             folder_path = Path(folder)
             if folder_path != self.__backup_location:
                 self.__included_folders.append(folder_path)
-                self.__included_folders_l.config(text="; ".join(map(str, self.__included_folders)))
+                self.update_included_folders_label()
+                self.__app_config.set_included_folders(*self.__included_folders)
             else:
-                messagebox.showwarning(title="Folder Same As Backup Path", message="You selected a folder that was the same as the backup path!")
+                messagebox.showwarning(
+                    title="Folder Same As Backup Path",
+                    message="You selected a folder that was the same as the backup path!")
 
     def set_backup_folder(self):
         folder = filedialog.askdirectory(initialdir="/", title="Select Where To Backup To")
         if folder:
             self.__backup_location = Path(folder)
             self.__backup_folder_l.config(text=folder)
+            self.__app_config.set_backup_path(self.__backup_location)
 
     def enable_gui(self):
         """
@@ -94,10 +112,14 @@ class TkApp(Tk):
     def start_backup(self):
         if not self.__backup_location:
             # no backup location was selected
-            messagebox.showwarning(title="Backup Location Not Selected", message="You did not select a backup location!")
+            messagebox.showwarning(
+                title="Backup Location Not Selected",
+                message="You did not select a backup location!")
         elif not self.__included_folders:
             # no folders where found to backup
-            messagebox.showwarning(title="No Folders To Backup", message="You did not add any folders to backup!")
+            messagebox.showwarning(
+                title="No Folders To Backup",
+                message="You did not add any folders to backup!")
         else:
             # basic checks passed
             self.__inc_folder_bnt.config(state=DISABLED)
