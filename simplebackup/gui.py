@@ -1,8 +1,8 @@
 from pathlib import Path
 from threading import Thread
-from tkinter import (BOTTOM, DISABLED, NORMAL, SUNKEN, Button, Label, Tk, W, X,
-                     filedialog, messagebox)
-from tkinter.ttk import Progressbar
+from tkinter import (BOTTOM, DISABLED, NORMAL, SUNKEN, Tk, W, X, filedialog,
+                     messagebox)
+from tkinter.ttk import Button, Label, Progressbar
 
 from . import __version__
 from .config import Config_Handler
@@ -28,7 +28,8 @@ class BackupThread(Thread):
 class TkApp(Tk):
     def __init__(self):
         super().__init__()
-        self.wm_title("Simple Backup | V" + __version__)
+        title = "Simple Backup | V" + __version__
+        self.wm_title(title)
 
         self.__thread = None
         self.__files_found = 0
@@ -39,6 +40,7 @@ class TkApp(Tk):
         self.__included_folders = self.__app_config.get_included_folders()
         self.__backup_location = self.__app_config.get_backup_path()
 
+        self.__title_l = Label(self, text=title)
         self.__inc_folder_bnt = Button(self, text="Add Folder", command=self.add_included_folder)
         self.__included_folders_l = Label(self)
         self.update_included_folders_label()
@@ -138,6 +140,7 @@ class TkApp(Tk):
             self.__thread.start()
 
     def layout(self):
+        self.__title_l.pack(fill=X)
         self.__inc_folder_bnt.pack(fill=X)
         self.__included_folders_l.pack(fill=X)
         self.__backup_to_bnt.pack(fill=X)
