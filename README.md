@@ -15,5 +15,5 @@ A Python3 app designed to be simple to use and efficient.
 - Allow for tar backups to be created instead of folders
 - Better format for showing all of the included folders to backup in the GUI
 - Ability to skip backing up certain folders
-- Ability to adjust versions to keep on GUI version
 - Add doc-strings to all functions/classes
+- Show last backup date

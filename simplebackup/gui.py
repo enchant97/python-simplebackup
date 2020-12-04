@@ -7,12 +7,17 @@ from tkinter.ttk import Button, Label, Progressbar
 from . import __version__
 from .config import Config_Handler
 from .const import APP_CONFIG_PATH
-from .core import copy_files, create_backup_folder, search_included
+from .core.backup_search import search_included
+from .core.copy_folder import copy_files, create_backup_folder
 
 
 class BackupThread(Thread):
+    """
+    A thread to run the backup and
+    update progressbar without freezing the gui
+    """
     def __init__(self, included_folders, backup_location, versions_to_keep, search_callback, copy_callback):
-        super().__init__()
+        super().__init__(name="backup")
         self.__included_folders = included_folders
         self.__backup_location = backup_location
         self.__versions_to_keep = versions_to_keep
@@ -26,6 +31,9 @@ class BackupThread(Thread):
 
 
 class TkApp(Tk):
+    """
+    The main Tk class for the gui of simplebackup
+    """
     def __init__(self):
         super().__init__()
         title = "Simple Backup | V" + __version__
@@ -54,6 +62,10 @@ class TkApp(Tk):
         self._layout()
 
     def update_versions_to_keep(self):
+        """
+        update the number of versions to keep,
+        asks the user for a integer
+        """
         new_val = simpledialog.askinteger("Versions To Keep", "How many backups do you want to keep")
         if new_val != self.__versions_to_keep and new_val != None:
             self.__versions_to_keep = new_val
@@ -70,6 +82,10 @@ class TkApp(Tk):
             self.__included_folders_l.config(text="None")
 
     def add_included_folder(self):
+        """
+        add a folder to include in the backup,
+        will ask user for a directory
+        """
         folder = filedialog.askdirectory(initialdir="/", title="Select Folder To Backup")
         if folder:
             folder_path = Path(folder)
@@ -83,6 +99,9 @@ class TkApp(Tk):
                     message="You selected a folder that was the same as the backup path!")
 
     def set_backup_folder(self):
+        """
+        sets the backup folder by asking the user for a base directory
+        """
         folder = filedialog.askdirectory(initialdir="/", title="Select Where To Backup To")
         if folder:
             self.__backup_location = Path(folder)
@@ -108,6 +127,12 @@ class TkApp(Tk):
         self.__backup_start_bnt.config(state=DISABLED)
 
     def progress_find_incr(self, finished=False):
+        """
+        increment the progress bar for finding
+        files by 1 or mark as finished
+
+            :param finished: mark the progressbar as finished
+        """
         if finished:
             self.__progress.config(mode="determinate")
             self.__progress.config(value=0, maximum=self.__files_found)
@@ -118,6 +143,10 @@ class TkApp(Tk):
             self.__statusbar.config(text=f"Searching For Files, Found {self.__files_found} Files")
 
     def progress_copy_incr(self):
+        """
+        increment the progress bar for copying
+        files by 1 or mark as finished
+        """
         self.__files_copied += 1
         self.__progress.config(value=self.__files_copied)
         self.__statusbar.config(text=f"Copying Files {self.__files_copied} of {self.__files_found}")
@@ -131,6 +160,9 @@ class TkApp(Tk):
             self.enable_gui()
 
     def start_backup(self):
+        """
+        starts the backup
+        """
         if not self.__backup_location:
             # no backup location was selected
             messagebox.showwarning(

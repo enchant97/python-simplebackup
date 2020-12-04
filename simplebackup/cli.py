@@ -3,7 +3,8 @@ from pathlib import Path
 from . import __version__
 from .config import Config_Handler
 from .const import APP_CONFIG_PATH
-from .core import copy_files, create_backup_folder, search_included
+from .core.backup_search import search_included
+from .core.copy_folder import copy_files, create_backup_folder
 
 
 class CLI:
