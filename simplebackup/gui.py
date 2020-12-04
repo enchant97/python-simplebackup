@@ -1,7 +1,7 @@
 from pathlib import Path
 from threading import Thread
 from tkinter import (BOTTOM, DISABLED, NORMAL, SUNKEN, Tk, W, X, filedialog,
-                     messagebox)
+                     messagebox, simpledialog)
 from tkinter.ttk import Button, Label, Progressbar
 
 from . import __version__
@@ -41,6 +41,8 @@ class TkApp(Tk):
         self.__backup_location = self.__app_config.get_backup_path()
 
         self.__title_l = Label(self, text=title)
+        self.__set_versions_to_keep = Button(self, text="Set Versions To Keep", command=self.update_versions_to_keep)
+        self.__versions_to_keep_l = Label(self, text=self.__versions_to_keep)
         self.__inc_folder_bnt = Button(self, text="Add Folder", command=self.add_included_folder)
         self.__included_folders_l = Label(self)
         self.update_included_folders_label()
@@ -49,7 +51,14 @@ class TkApp(Tk):
         self.__backup_start_bnt = Button(self, text="Start Backup", command=self.start_backup)
         self.__progress = Progressbar(self)
         self.__statusbar = Label(self, relief=SUNKEN, anchor=W)
-        self.layout()
+        self._layout()
+
+    def update_versions_to_keep(self):
+        new_val = simpledialog.askinteger("Versions To Keep", "How many backups do you want to keep")
+        if new_val != self.__versions_to_keep and new_val != None:
+            self.__versions_to_keep = new_val
+            self.__app_config.set_versions_to_keep(self.__versions_to_keep)
+            self.__versions_to_keep_l.config(text=self.__versions_to_keep)
 
     def update_included_folders_label(self):
         """
@@ -84,9 +93,19 @@ class TkApp(Tk):
         """
         enable the gui buttons, run when a backup has completed
         """
+        self.__set_versions_to_keep.config(state=NORMAL)
         self.__inc_folder_bnt.config(state=NORMAL)
         self.__backup_to_bnt.config(state=NORMAL)
         self.__backup_start_bnt.config(state=NORMAL)
+
+    def disable_gui(self):
+        """
+        disable the gui buttons, run when a backup is started
+        """
+        self.__set_versions_to_keep.config(state=DISABLED)
+        self.__inc_folder_bnt.config(state=DISABLED)
+        self.__backup_to_bnt.config(state=DISABLED)
+        self.__backup_start_bnt.config(state=DISABLED)
 
     def progress_find_incr(self, finished=False):
         if finished:
@@ -124,9 +143,7 @@ class TkApp(Tk):
                 message="You did not add any folders to backup!")
         else:
             # basic checks passed
-            self.__inc_folder_bnt.config(state=DISABLED)
-            self.__backup_to_bnt.config(state=DISABLED)
-            self.__backup_start_bnt.config(state=DISABLED)
+            self.disable_gui()
             # prep for search of files
             self.__progress.config(mode="indeterminate")
             self.__statusbar.config(text=f"Searching For Files")
@@ -139,8 +156,10 @@ class TkApp(Tk):
             # start the background backup thread so GUI wont appear frozen
             self.__thread.start()
 
-    def layout(self):
+    def _layout(self):
         self.__title_l.pack(fill=X)
+        self.__set_versions_to_keep.pack(fill=X)
+        self.__versions_to_keep_l.pack(fill=X)
         self.__inc_folder_bnt.pack(fill=X)
         self.__included_folders_l.pack(fill=X)
         self.__backup_to_bnt.pack(fill=X)
@@ -148,3 +167,5 @@ class TkApp(Tk):
         self.__backup_start_bnt.pack(fill=X)
         self.__progress.pack(fill=X)
         self.__statusbar.pack(side=BOTTOM, fill=X)
+        self.wm_minsize(300, self.winfo_height())
+        self.wm_resizable(True, False)
