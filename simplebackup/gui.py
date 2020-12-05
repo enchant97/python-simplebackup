@@ -1,14 +1,15 @@
 from pathlib import Path
 from threading import Thread
-from tkinter import (BOTTOM, DISABLED, NORMAL, SUNKEN, Tk, W, X, filedialog,
-                     messagebox, simpledialog)
-from tkinter.ttk import Button, Label, Progressbar
+from tkinter import (BOTTOM, DISABLED, NORMAL, SUNKEN, BooleanVar, Tk, W, X,
+                     filedialog, messagebox, simpledialog)
+from tkinter.ttk import Button, Checkbutton, Label, Progressbar
 
 from . import __version__
 from .config import Config_Handler
 from .const import APP_CONFIG_PATH
 from .core.backup_search import search_included
 from .core.copy_folder import copy_files, create_backup_folder
+from .core.copy_tar import copy_tar_files
 
 
 class BackupThread(Thread):
@@ -16,18 +17,22 @@ class BackupThread(Thread):
     A thread to run the backup and
     update progressbar without freezing the gui
     """
-    def __init__(self, included_folders, backup_location, versions_to_keep, search_callback, copy_callback):
+    def __init__(self, included_folders, backup_location, versions_to_keep, search_callback, copy_callback, use_tar=False):
         super().__init__(name="backup")
         self.__included_folders = included_folders
         self.__backup_location = backup_location
         self.__versions_to_keep = versions_to_keep
         self.__search_callback = search_callback
         self.__copy_callback = copy_callback
+        self.__use_tar = use_tar
 
     def run(self):
         files_to_backup = search_included(self.__included_folders, self.__search_callback)
-        backup_folder = create_backup_folder(self.__backup_location, self.__versions_to_keep)
-        copy_files(backup_folder, files_to_backup, self.__copy_callback)
+        if self.__use_tar:
+            copy_tar_files(files_to_backup, self.__backup_location, self.__copy_callback)
+        else:
+            backup_folder = create_backup_folder(self.__backup_location, self.__versions_to_keep)
+            copy_files(backup_folder, files_to_backup, self.__copy_callback)
 
 
 class TkApp(Tk):
@@ -56,6 +61,9 @@ class TkApp(Tk):
         self.update_included_folders_label()
         self.__backup_to_bnt = Button(self, text="Backup Folder", command=self.set_backup_folder)
         self.__backup_folder_l = Label(self, text=str(self.__backup_location))
+        self.__use_tar_l = Label(self, text="Use Tar")
+        self.__use_tar_var = BooleanVar(self, False)
+        self.__use_tar = Checkbutton(self, variable=self.__use_tar_var)
         self.__backup_start_bnt = Button(self, text="Start Backup", command=self.start_backup)
         self.__progress = Progressbar(self)
         self.__statusbar = Label(self, relief=SUNKEN, anchor=W)
@@ -115,6 +123,7 @@ class TkApp(Tk):
         self.__set_versions_to_keep.config(state=NORMAL)
         self.__inc_folder_bnt.config(state=NORMAL)
         self.__backup_to_bnt.config(state=NORMAL)
+        self.__use_tar.config(state=NORMAL)
         self.__backup_start_bnt.config(state=NORMAL)
 
     def disable_gui(self):
@@ -124,6 +133,7 @@ class TkApp(Tk):
         self.__set_versions_to_keep.config(state=DISABLED)
         self.__inc_folder_bnt.config(state=DISABLED)
         self.__backup_to_bnt.config(state=DISABLED)
+        self.__use_tar.config(state=DISABLED)
         self.__backup_start_bnt.config(state=DISABLED)
 
     def progress_find_incr(self, finished=False):
@@ -183,7 +193,7 @@ class TkApp(Tk):
             self.__thread = BackupThread(
                 self.__included_folders, self.__backup_location,
                 self.__versions_to_keep, self.progress_find_incr,
-                self.progress_copy_incr
+                self.progress_copy_incr, self.__use_tar_var.get()
                 )
             # start the background backup thread so GUI wont appear frozen
             self.__thread.start()
@@ -196,6 +206,8 @@ class TkApp(Tk):
         self.__included_folders_l.pack(fill=X)
         self.__backup_to_bnt.pack(fill=X)
         self.__backup_folder_l.pack(fill=X)
+        self.__use_tar_l.pack(fill=X)
+        self.__use_tar.pack(fill=X)
         self.__backup_start_bnt.pack(fill=X)
         self.__progress.pack(fill=X)
         self.__statusbar.pack(side=BOTTOM, fill=X)

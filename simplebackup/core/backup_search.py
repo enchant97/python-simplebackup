@@ -21,16 +21,18 @@ def search_included(paths_to_scan: tuple, callback_progress=None):
                                   for whether it has finished search
         :return: yields each new filepath found as Path obj
     """
+    found_paths = []
     for top in paths_to_scan:
         for root, _dirs, files in os.walk(top):
             if files:
                 for file in files:
+                    found_paths.append(Path(root).joinpath(file))
                     if callback_progress:
                         # call progress callback to say file has been found
                         callback_progress()
-                    yield Path(root).joinpath(file)
     if callback_progress:
         callback_progress(True)
+    return found_paths
 
 def find_prev_backups(root_backup_path: Path, name_re=BACKUP_DATESTAMP_UTC_REG):
     """
