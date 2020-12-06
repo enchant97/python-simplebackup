@@ -30,8 +30,7 @@ def copy_file(file_path: Path, backup_root: Path, callback_progress=None):
     # if the path has further folders
     file_parts = file_path.parts
     if len(file_parts) > 3:
-        for i in range(1, len(file_parts) -1):
-            to_path = to_path / file_parts[i]
+        to_path = to_path.joinpath(*file_parts[1:-1])
     elif len(file_parts) == 3:
         to_path = to_path / file_parts[-2]
     # make the directories
