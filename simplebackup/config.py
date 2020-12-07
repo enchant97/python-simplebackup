@@ -8,7 +8,8 @@ from pathlib import Path
 DEFAULT_CONF = {
     "backup-path": None,
     "included-folders": [],
-    "versions-to-keep": 2
+    "versions-to-keep": 2,
+    "use-tar": False
 }
 
 
@@ -57,7 +58,11 @@ class Config_Handler:
         self.__write()
 
     def set_versions_to_keep(self, new_val: int):
-        self.__config["versions-to-keep"] = new_val
+        self.__config["versions-to-keep"] = int(new_val)
+        self.__write()
+
+    def set_use_tar(self, new_val: bool):
+        self.__config["use-tar"] = bool(new_val)
         self.__write()
 
     def get_included_folders(self) -> list:
@@ -70,3 +75,6 @@ class Config_Handler:
 
     def get_versions_to_keep(self) -> int:
         return self.__config["versions-to-keep"]
+
+    def get_use_tar(self) -> bool:
+        return self.__config["use-tar"]

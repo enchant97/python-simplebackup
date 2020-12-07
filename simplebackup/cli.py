@@ -17,7 +17,7 @@ class CLI:
         self.__versions_to_keep = self.__app_config.get_versions_to_keep()
         self.__paths_to_backup = self.__app_config.get_included_folders()
         self.__backup_path = self.__app_config.get_backup_path()
-        self.__use_tar = False
+        self.__use_tar = self.__app_config.get_use_tar()
 
     def show_welcome(self):
         print("Simple Backup CLI Mode | V" + __version__)
@@ -105,6 +105,7 @@ class CLI:
                 break
             elif choice == "5":
                 self.__use_tar = not self.__use_tar
+                self.__app_config.set_use_tar(self.__use_tar)
             elif choice == "4":
                 if self.backup():
                     break

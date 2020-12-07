@@ -64,12 +64,16 @@ class TkApp(Tk):
         self.__backup_to_bnt = Button(self, text="Backup Folder", command=self.set_backup_folder)
         self.__backup_folder_l = Label(self, text=str(self.__backup_location))
         self.__use_tar_l = Label(self, text="Use Tar")
-        self.__use_tar_var = BooleanVar(self, False)
+        self.__use_tar_var = BooleanVar(self, self.__app_config.get_use_tar())
+        self.__use_tar_var.trace_add("write", self.use_tar_changed)
         self.__use_tar = Checkbutton(self, variable=self.__use_tar_var)
         self.__backup_start_bnt = Button(self, text="Start Backup", command=self.start_backup)
         self.__progress = Progressbar(self)
         self.__statusbar = Label(self, relief=SUNKEN, anchor=W)
         self._layout()
+
+    def use_tar_changed(self, *args):
+        self.__app_config.set_use_tar(self.__use_tar_var.get())
 
     def update_versions_to_keep(self):
         """
