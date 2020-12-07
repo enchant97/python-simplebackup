@@ -3,8 +3,9 @@ from pathlib import Path
 from . import __version__
 from .config import Config_Handler
 from .const import APP_CONFIG_PATH
-from .core.backup_search import search_included
+from .core.backup_search import delete_prev_backups, search_included
 from .core.copy_folder import copy_files, create_backup_folder
+from .core.copy_tar import copy_tar_files
 
 
 class CLI:
@@ -16,6 +17,7 @@ class CLI:
         self.__versions_to_keep = self.__app_config.get_versions_to_keep()
         self.__paths_to_backup = self.__app_config.get_included_folders()
         self.__backup_path = self.__app_config.get_backup_path()
+        self.__use_tar = False
 
     def show_welcome(self):
         print("Simple Backup CLI Mode | V" + __version__)
@@ -71,9 +73,13 @@ class CLI:
             print("\nPress A Key To Quit")
 
     def backup(self):
+        delete_prev_backups(self.__backup_path, self.__versions_to_keep)
         files_to_backup = search_included(self.__paths_to_backup, self.incr_search_prog)
-        backup_folder = create_backup_folder(self.__backup_path, self.__versions_to_keep)
-        copy_files(backup_folder, files_to_backup, self.incr_backed_up_prog)
+        if self.__use_tar:
+            copy_tar_files(files_to_backup, self.__backup_path, self.incr_backed_up_prog)
+        else:
+            backup_folder = create_backup_folder(self.__backup_path)
+            copy_files(backup_folder, files_to_backup, self.incr_backed_up_prog)
 
         # wait for files to finish copying then return to menu
         while True:
@@ -88,11 +94,17 @@ class CLI:
             print("1. change backup path")
             print("2. add a folder to backup")
             print(f"3. change versions to keep ({self.__versions_to_keep})")
-            print("4. start backup")
-            print("5. quit")
+            print("4. start folder backup")
+            if self.__use_tar:
+                print("5. switch to folder type")
+            else:
+                print("5. switch to tar type")
+            print("q. quit")
             choice = input("Enter Your Choice: ")
-            if choice == "5":
+            if choice == "q":
                 break
+            elif choice == "5":
+                self.__use_tar = not self.__use_tar
             elif choice == "4":
                 if self.backup():
                     break

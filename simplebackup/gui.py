@@ -7,7 +7,7 @@ from tkinter.ttk import Button, Checkbutton, Label, Progressbar
 from . import __version__
 from .config import Config_Handler
 from .const import APP_CONFIG_PATH
-from .core.backup_search import search_included
+from .core.backup_search import delete_prev_backups, search_included
 from .core.copy_folder import copy_files, create_backup_folder
 from .core.copy_tar import copy_tar_files
 
@@ -27,11 +27,13 @@ class BackupThread(Thread):
         self.__use_tar = use_tar
 
     def run(self):
+        # delete prev backups, find files to backup, then do backup
+        delete_prev_backups(self.__backup_location, self.__versions_to_keep)
         files_to_backup = search_included(self.__included_folders, self.__search_callback)
         if self.__use_tar:
             copy_tar_files(files_to_backup, self.__backup_location, self.__copy_callback)
         else:
-            backup_folder = create_backup_folder(self.__backup_location, self.__versions_to_keep)
+            backup_folder = create_backup_folder(self.__backup_location)
             copy_files(backup_folder, files_to_backup, self.__copy_callback)
 
 

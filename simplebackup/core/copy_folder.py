@@ -9,7 +9,6 @@ from functools import partial
 from pathlib import Path
 
 from ..const import BACKUP_DATESTAMP_UTC
-from .backup_search import find_prev_backups
 
 
 def copy_file(file_path: Path, backup_root: Path, callback_progress=None):
@@ -61,22 +60,13 @@ def copy_files(backup_folder: Path, file_paths, callback_progress=None):
             file_paths
             )
 
-def create_backup_folder(root_backup_path: Path, versions_to_keep=2):
+def create_backup_folder(root_backup_path: Path):
     """
-    creates the dated backup folder and removes
-    old ones if versions have reached limit
+    creates the dated backup folder
 
         :param root_backup_path: the root backup path
-        :param versions_to_keep: the number of backups to keep if -1 will keep all
         :return: the path a backup should be used for all backup files
     """
-    prev_backups = [i for i in find_prev_backups(root_backup_path)]
-    if (versions_to_keep > 0) and (len(prev_backups) >= versions_to_keep):
-        prev_backups = sorted(prev_backups, reverse=True)
-        difference = (len(prev_backups) - versions_to_keep) + 1
-        for i in range(difference):
-            shutil.rmtree(prev_backups[i - 1])
-
     backup_path = root_backup_path / datetime.utcnow().strftime(BACKUP_DATESTAMP_UTC)
     backup_path.mkdir(parents=True, exist_ok=True)
     return backup_path
