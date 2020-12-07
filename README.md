@@ -12,8 +12,9 @@ A Python3 app designed to be simple to use and efficient.
 - For GUI version run `python3 -m simplebackup gui`
 
 ## TODO
-- Allow for tar backups to be created instead of folders
 - Better format for showing all of the included folders to backup in the GUI
 - Ability to skip backing up certain folders
 - Add doc-strings to all functions/classes
 - Show last backup date
+- Optional tar compression option
+- Restore function
