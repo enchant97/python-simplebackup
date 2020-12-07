@@ -8,4 +8,5 @@
 /build/
 /*.egg-info
 /*.egg
-simplebackup/app_config.json
+simple-backup.spec
+*app_config.json

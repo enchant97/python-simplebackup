@@ -41,7 +41,7 @@ class TkApp(Tk):
     """
     The main Tk class for the gui of simplebackup
     """
-    def __init__(self):
+    def __init__(self, **kwargs):
         super().__init__()
         title = "Simple Backup | V" + __version__
         self.wm_title(title)
@@ -50,7 +50,8 @@ class TkApp(Tk):
         self.__files_found = 0
         self.__files_copied = 0
 
-        self.__app_config = Config_Handler(APP_CONFIG_PATH)
+        config_fn = kwargs.get("config_fn", APP_CONFIG_PATH)
+        self.__app_config = Config_Handler(config_fn)
         self.__versions_to_keep = self.__app_config.get_versions_to_keep()
         self.__included_folders = self.__app_config.get_included_folders()
         self.__backup_location = self.__app_config.get_backup_path()
