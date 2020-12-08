@@ -1,11 +1,13 @@
+import webbrowser
 from pathlib import Path
 from tkinter import (BOTTOM, DISABLED, END, NORMAL, SUNKEN, BooleanVar,
-                     Listbox, Tk, W, X, filedialog, messagebox, simpledialog)
+                     Listbox, Menu, Tk, W, X, filedialog, messagebox,
+                     simpledialog)
 from tkinter.ttk import Button, Checkbutton, Label, Progressbar
 
 from .. import __version__
 from ..config import Config_Handler
-from ..const import APP_CONFIG_PATH
+from ..const import APP_CONFIG_PATH, UPDATE_URL
 from .backup_thread import BackupThread
 
 
@@ -28,6 +30,15 @@ class TkApp(Tk):
         self.__included_folders = self.__app_config.get_included_folders()
         self.__backup_location = self.__app_config.get_backup_path()
 
+        self.__menu = Menu(self)
+        self.__menu_file = Menu(self.__menu, tearoff=0)
+        self.__menu_file.add_command(label="Quit", command=self.quit)
+        self.__menu_help = Menu(self.__menu, tearoff=0)
+        self.__menu_help.add_command(label="Check for Updates", command=self.show_update_popup)
+        self.__menu_help.add_command(label="About", command=self.show_about_popup)
+        self.__menu.add_cascade(label="File", menu=self.__menu_file)
+        self.__menu.add_cascade(label="Help", menu=self.__menu_help)
+
         self.__title_l = Label(self, text=title)
         self.__set_versions_to_keep = Button(self, text="Set Versions To Keep", command=self.update_versions_to_keep)
         self.__versions_to_keep_l = Label(self, text=self.__versions_to_keep)
@@ -43,7 +54,7 @@ class TkApp(Tk):
         self.__use_tar = Checkbutton(self, variable=self.__use_tar_var)
         self.__backup_start_bnt = Button(self, text="Start Backup", command=self.start_backup)
         self.__progress = Progressbar(self)
-        self.__statusbar = Label(self, relief=SUNKEN, anchor=W)
+        self.__statusbar = Label(self, text="ok", relief=SUNKEN, anchor=W)
         self._layout()
 
     def use_tar_changed(self, *args):
@@ -181,7 +192,18 @@ class TkApp(Tk):
             # start the background backup thread so GUI wont appear frozen
             self.__thread.start()
 
+    def show_about_popup(self):
+        messagebox.showinfo(
+            "About",
+            "simplebackup V" + __version__ + """ is cross-platform backup program written in python.
+This app was made by enchant97/Leo Spratt.
+It is licenced under GPL-3.0""")
+
+    def show_update_popup(self):
+        webbrowser.open(UPDATE_URL)
+
     def _layout(self):
+        self.config(menu=self.__menu)
         self.__title_l.pack(fill=X)
         self.__set_versions_to_keep.pack(fill=X)
         self.__versions_to_keep_l.pack(fill=X)
