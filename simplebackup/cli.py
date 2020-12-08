@@ -75,21 +75,28 @@ class CLI:
             print("\nPress A Key To Quit")
 
     def backup(self):
-        delete_prev_backups(self.__backup_path, self.__versions_to_keep)
-        files_to_backup = search_included(self.__paths_to_backup, self.incr_search_prog)
-        if self.__use_tar:
-            copy_tar_files(files_to_backup, self.__backup_path, self.incr_backed_up_prog)
-        else:
-            backup_folder = create_backup_folder(self.__backup_path)
-            copy_files(backup_folder, files_to_backup, self.incr_backed_up_prog)
+        if self.__backup_path:
+            if self.__paths_to_backup:
+                delete_prev_backups(self.__backup_path, self.__versions_to_keep)
+                files_to_backup = search_included(self.__paths_to_backup, self.incr_search_prog)
+                if self.__use_tar:
+                    copy_tar_files(files_to_backup, self.__backup_path, self.incr_backed_up_prog)
+                else:
+                    backup_folder = create_backup_folder(self.__backup_path)
+                    copy_files(backup_folder, files_to_backup, self.incr_backed_up_prog)
 
-        # wait for files to finish copying then return to menu
-        while True:
-            input()
-            if self.__files_backed_up == self.__files_found:
-                self.__app_config.set_last_backup(datetime.utcnow())
-                break
-        return True
+                # wait for files to finish copying then return to menu
+                while True:
+                    input()
+                    if self.__files_backed_up == self.__files_found:
+                        self.__app_config.set_last_backup(datetime.utcnow())
+                        break
+                return True
+            else:
+                print("No folders added to backup!")
+        else:
+            print("Backup path not set!")
+        return False
 
     def show_menu(self):
         while True:
