@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 
 from . import __version__
@@ -22,6 +23,7 @@ class CLI:
     def show_welcome(self):
         print("Simple Backup CLI Mode | V" + __version__)
         print("Written By Leo Spratt - GPL-3.0")
+        print(f"Last Known Backup: {self.__app_config.human_last_backup}")
 
     def add_path_to_backup(self):
         while True:
@@ -85,6 +87,7 @@ class CLI:
         while True:
             input()
             if self.__files_backed_up == self.__files_found:
+                self.__app_config.set_last_backup(datetime.utcnow())
                 break
         return True
 

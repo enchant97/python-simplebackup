@@ -3,13 +3,17 @@ Used for handling the configuration of the app
 """
 
 import json
+from datetime import datetime
 from pathlib import Path
+
+from .const import HUMAN_READABLE_TIMESTAMP, UTC_TIMESTAMP
 
 DEFAULT_CONF = {
     "backup-path": None,
     "included-folders": [],
     "versions-to-keep": 2,
-    "use-tar": False
+    "use-tar": False,
+    "last-backup": None
 }
 
 
@@ -65,6 +69,13 @@ class Config_Handler:
         self.__config["use-tar"] = bool(new_val)
         self.__write()
 
+    def set_last_backup(self, new_val: datetime):
+        if isinstance(new_val, datetime):
+            self.__config["last-backup"] = new_val.strftime(UTC_TIMESTAMP)
+        else:
+            self.__config["last-backup"] = None
+        self.__write()
+
     def get_included_folders(self) -> list:
         return [Path(i) for i in self.__config["included-folders"]]
 
@@ -78,3 +89,16 @@ class Config_Handler:
 
     def get_use_tar(self) -> bool:
         return self.__config["use-tar"]
+
+    def get_last_backup(self) -> datetime:
+        if not self.__config["last-backup"]:
+            return None
+        return datetime.strptime(self.__config["last-backup"], UTC_TIMESTAMP)
+
+    @property
+    def human_last_backup(self) -> str:
+        if not self.__config["last-backup"]:
+            return "never"
+        return datetime.strptime(
+            self.__config["last-backup"], UTC_TIMESTAMP
+            ).strftime(HUMAN_READABLE_TIMESTAMP)

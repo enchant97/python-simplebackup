@@ -1,4 +1,5 @@
 import webbrowser
+from datetime import datetime
 from pathlib import Path
 from tkinter import (BOTTOM, DISABLED, END, NORMAL, SUNKEN, BooleanVar,
                      Listbox, Menu, Tk, W, X, filedialog, messagebox,
@@ -40,6 +41,7 @@ class TkApp(Tk):
         self.__menu.add_cascade(label="Help", menu=self.__menu_help)
 
         self.__title_l = Label(self, text=title)
+        self.__last_backup_l = Label(self, text=f"Last Known Backup: {self.__app_config.human_last_backup}")
         self.__set_versions_to_keep = Button(self, text="Set Versions To Keep", command=self.update_versions_to_keep)
         self.__versions_to_keep_l = Label(self, text=self.__versions_to_keep)
         self.__inc_folder_bnt = Button(self, text="Add Folder", command=self.add_included_folder)
@@ -155,6 +157,8 @@ class TkApp(Tk):
         self.__progress.config(value=self.__files_copied)
         self.__statusbar.config(text=f"Copying Files {self.__files_copied} of {self.__files_found}")
         if self.__files_copied == self.__files_found:
+            self.__app_config.set_last_backup(datetime.utcnow())
+            self.__last_backup_l.config(text=f"Last Known Backup: {self.__app_config.human_last_backup}")
             self.__statusbar.config(text=f"Finished Copying Files")
             messagebox.showinfo(title="Finished Copying Files", message="Finished copying all found files")
             # reset counters
@@ -205,6 +209,7 @@ It is licenced under GPL-3.0""")
     def _layout(self):
         self.config(menu=self.__menu)
         self.__title_l.pack(fill=X)
+        self.__last_backup_l.pack(fill=X)
         self.__set_versions_to_keep.pack(fill=X)
         self.__versions_to_keep_l.pack(fill=X)
         self.__inc_folder_bnt.pack(fill=X)
