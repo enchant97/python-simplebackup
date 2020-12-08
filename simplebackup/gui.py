@@ -1,7 +1,7 @@
 from pathlib import Path
 from threading import Thread
-from tkinter import (BOTTOM, DISABLED, NORMAL, SUNKEN, BooleanVar, Tk, W, X,
-                     filedialog, messagebox, simpledialog)
+from tkinter import (BOTTOM, DISABLED, END, NORMAL, SUNKEN, BooleanVar,
+                     Listbox, Tk, W, X, filedialog, messagebox, simpledialog)
 from tkinter.ttk import Button, Checkbutton, Label, Progressbar
 
 from . import __version__
@@ -60,8 +60,9 @@ class TkApp(Tk):
         self.__set_versions_to_keep = Button(self, text="Set Versions To Keep", command=self.update_versions_to_keep)
         self.__versions_to_keep_l = Label(self, text=self.__versions_to_keep)
         self.__inc_folder_bnt = Button(self, text="Add Folder", command=self.add_included_folder)
-        self.__included_folders_l = Label(self)
-        self.update_included_folders_label()
+        self.__included_folders_lb = Listbox(self)
+        self.__included_folders_lb.bind("<<ListboxSelect>>", self.remove_selected_included_folder)
+        self.__included_folders_lb.insert(0, *self.__included_folders)
         self.__backup_to_bnt = Button(self, text="Backup Folder", command=self.set_backup_folder)
         self.__backup_folder_l = Label(self, text=str(self.__backup_location))
         self.__use_tar_l = Label(self, text="Use Tar")
@@ -87,15 +88,6 @@ class TkApp(Tk):
             self.__app_config.set_versions_to_keep(self.__versions_to_keep)
             self.__versions_to_keep_l.config(text=self.__versions_to_keep)
 
-    def update_included_folders_label(self):
-        """
-        update the included folders label with new included folders
-        """
-        if self.__included_folders:
-            self.__included_folders_l.config(text="; ".join(map(str, self.__included_folders)))
-        else:
-            self.__included_folders_l.config(text="None")
-
     def add_included_folder(self):
         """
         add a folder to include in the backup,
@@ -106,12 +98,24 @@ class TkApp(Tk):
             folder_path = Path(folder)
             if folder_path != self.__backup_location:
                 self.__included_folders.append(folder_path)
-                self.update_included_folders_label()
+                self.__included_folders_lb.insert(END, folder_path)
                 self.__app_config.set_included_folders(*self.__included_folders)
             else:
                 messagebox.showwarning(
                     title="Folder Same As Backup Path",
                     message="You selected a folder that was the same as the backup path!")
+
+    def remove_selected_included_folder(self, _):
+        """
+        remove the currently selected
+        item in the included folders ListBox,
+        will ask the user to confirm
+        """
+        if messagebox.askyesno("Confirm Delete", "Are you want to delete this folder?"):
+            index_to_del = self.__included_folders_lb.curselection()[0]
+            self.__included_folders.pop(index_to_del)
+            self.__app_config.set_included_folders(*self.__included_folders)
+            self.__included_folders_lb.delete(index_to_del)
 
     def set_backup_folder(self):
         """
@@ -210,7 +214,7 @@ class TkApp(Tk):
         self.__set_versions_to_keep.pack(fill=X)
         self.__versions_to_keep_l.pack(fill=X)
         self.__inc_folder_bnt.pack(fill=X)
-        self.__included_folders_l.pack(fill=X)
+        self.__included_folders_lb.pack(fill=X)
         self.__backup_to_bnt.pack(fill=X)
         self.__backup_folder_l.pack(fill=X)
         self.__use_tar_l.pack(fill=X)
