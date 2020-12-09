@@ -29,6 +29,7 @@ class TkApp(Tk):
         self.__app_config = Config_Handler(config_fn)
         self.__versions_to_keep = self.__app_config.get_versions_to_keep()
         self.__included_folders = self.__app_config.get_included_folders()
+        self.__excluded_folders = self.__app_config.get_excluded_folders()
         self.__backup_location = self.__app_config.get_backup_path()
 
         self.__menu = Menu(self)
@@ -44,10 +45,16 @@ class TkApp(Tk):
         self.__last_backup_l = Label(self, text=f"Last Known Backup: {self.__app_config.human_last_backup}")
         self.__set_versions_to_keep = Button(self, text="Set Versions To Keep", command=self.update_versions_to_keep)
         self.__versions_to_keep_l = Label(self, text=self.__versions_to_keep)
-        self.__inc_folder_bnt = Button(self, text="Add Folder", command=self.add_included_folder)
-        self.__included_folders_lb = Listbox(self)
+        self.__inc_folder_bnt = Button(self, text="Include Another Folder", command=self.add_included_folder)
+        self.__included_folders_lb = Listbox(self, height=4)
         self.__included_folders_lb.bind("<<ListboxSelect>>", self.remove_selected_included_folder)
+        self.__included_folders_lb.bind('<FocusOut>', self.deselect_included_folder)
         self.__included_folders_lb.insert(0, *self.__included_folders)
+        self.__excl_folder_bnt = Button(self, text="Exclude Another Folder", command=self.add_excluded_folder)
+        self.__excluded_folders_lb = Listbox(self, height=4)
+        self.__excluded_folders_lb.bind("<<ListboxSelect>>", self.remove_selected_excluded_folder)
+        self.__excluded_folders_lb.bind('<FocusOut>', self.deselect_excluded_folder)
+        self.__excluded_folders_lb.insert(0, *self.__excluded_folders)
         self.__backup_to_bnt = Button(self, text="Backup Folder", command=self.set_backup_folder)
         self.__backup_folder_l = Label(self, text=str(self.__backup_location))
         self.__use_tar_l = Label(self, text="Use Tar")
@@ -73,6 +80,12 @@ class TkApp(Tk):
             self.__app_config.set_versions_to_keep(self.__versions_to_keep)
             self.__versions_to_keep_l.config(text=self.__versions_to_keep)
 
+    def deselect_included_folder(self, *args):
+        self.__included_folders_lb.selection_clear(0, END)
+
+    def deselect_excluded_folder(self, *args):
+        self.__excluded_folders_lb.selection_clear(0, END)
+
     def add_included_folder(self):
         """
         add a folder to include in the backup,
@@ -90,17 +103,50 @@ class TkApp(Tk):
                     title="Folder Same As Backup Path",
                     message="You selected a folder that was the same as the backup path!")
 
-    def remove_selected_included_folder(self, _):
+    def remove_selected_included_folder(self, *args):
         """
         remove the currently selected
         item in the included folders ListBox,
         will ask the user to confirm
         """
-        if messagebox.askyesno("Confirm Delete", "Are you want to delete this folder?"):
-            index_to_del = self.__included_folders_lb.curselection()[0]
-            self.__included_folders.pop(index_to_del)
-            self.__app_config.set_included_folders(*self.__included_folders)
-            self.__included_folders_lb.delete(index_to_del)
+        curr_selection = self.__included_folders_lb.curselection()
+        # check if there is a selection
+        if curr_selection:
+            if messagebox.askyesno("Confirm Delete", "Are you want to delete this folder?"):
+                index_to_del = curr_selection[0]
+                self.__included_folders.pop(index_to_del)
+                self.__app_config.set_included_folders(*self.__included_folders)
+                self.__included_folders_lb.delete(index_to_del)
+            self.deselect_included_folder()
+
+    def add_excluded_folder(self):
+        """
+        add a folder to exclude in the backup,
+        will ask user for a directory
+        """
+        folder = filedialog.askdirectory(initialdir="/", title="Select Folder To Exclude")
+        if folder:
+            folder_path = Path(folder)
+            self.__excluded_folders.append(folder_path)
+            self.__excluded_folders_lb.insert(END, folder_path)
+            self.__app_config.set_included_folders(*self.__excluded_folders)
+
+    def remove_selected_excluded_folder(self, *args):
+        """
+        remove the currently selected
+        item in the excluded folders ListBox,
+        will ask the user to confirm
+        """
+
+        curr_selection = self.__included_folders_lb.curselection()
+        # check if there is a selection
+        if curr_selection:
+            if messagebox.askyesno("Confirm Delete", "Are you want to delete this folder?"):
+                index_to_del = curr_selection[0]
+                self.__excluded_folders.pop(index_to_del)
+                self.__app_config.set_excluded_folders(*self.__excluded_folders)
+                self.__excluded_folders_lb.delete(index_to_del)
+            self.deselect_excluded_folder()
 
     def set_backup_folder(self):
         """
@@ -118,6 +164,9 @@ class TkApp(Tk):
         """
         self.__set_versions_to_keep.config(state=NORMAL)
         self.__inc_folder_bnt.config(state=NORMAL)
+        self.__included_folders_lb.config(state=NORMAL)
+        self.__excl_folder_bnt.config(state=NORMAL)
+        self.__excluded_folders_lb.config(state=NORMAL)
         self.__backup_to_bnt.config(state=NORMAL)
         self.__use_tar.config(state=NORMAL)
         self.__backup_start_bnt.config(state=NORMAL)
@@ -128,6 +177,9 @@ class TkApp(Tk):
         """
         self.__set_versions_to_keep.config(state=DISABLED)
         self.__inc_folder_bnt.config(state=DISABLED)
+        self.__included_folders_lb.config(state=DISABLED)
+        self.__excl_folder_bnt.config(state=DISABLED)
+        self.__excluded_folders_lb.config(state=DISABLED)
         self.__backup_to_bnt.config(state=DISABLED)
         self.__use_tar.config(state=DISABLED)
         self.__backup_start_bnt.config(state=DISABLED)
@@ -189,9 +241,10 @@ class TkApp(Tk):
             self.__statusbar.config(text=f"Searching For Files")
 
             self.__thread = BackupThread(
-                self.__included_folders, self.__backup_location,
-                self.__versions_to_keep, self.progress_find_incr,
-                self.progress_copy_incr, self.__use_tar_var.get()
+                self.__included_folders, self.__excluded_folders,
+                self.__backup_location, self.__versions_to_keep,
+                self.progress_find_incr, self.progress_copy_incr,
+                self.__use_tar_var.get()
                 )
             # start the background backup thread so GUI wont appear frozen
             self.__thread.start()
@@ -214,6 +267,8 @@ It is licenced under GPL-3.0""")
         self.__versions_to_keep_l.pack(fill=X)
         self.__inc_folder_bnt.pack(fill=X)
         self.__included_folders_lb.pack(fill=X)
+        self.__excl_folder_bnt.pack(fill=X)
+        self.__excluded_folders_lb.pack(fill=X)
         self.__backup_to_bnt.pack(fill=X)
         self.__backup_folder_l.pack(fill=X)
         self.__use_tar_l.pack(fill=X)

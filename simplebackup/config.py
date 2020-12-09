@@ -11,6 +11,7 @@ from .const import HUMAN_READABLE_TIMESTAMP, UTC_TIMESTAMP
 DEFAULT_CONF = {
     "backup-path": None,
     "included-folders": [],
+    "excluded-folders": [],
     "versions-to-keep": 2,
     "use-tar": False,
     "last-backup": None
@@ -57,6 +58,10 @@ class Config_Handler:
         self.__config["included-folders"] = [str(i) for i in locations]
         self.__write()
 
+    def set_excluded_folders(self, *locations):
+        self.__config["excluded-folders"] = [str(i) for i in locations]
+        self.__write()
+
     def set_backup_path(self, new_path: Path):
         self.__config["backup-path"] = str(new_path)
         self.__write()
@@ -78,6 +83,9 @@ class Config_Handler:
 
     def get_included_folders(self) -> list:
         return [Path(i) for i in self.__config["included-folders"]]
+
+    def get_excluded_folders(self) -> list:
+        return [Path(i) for i in self.__config["excluded-folders"]]
 
     def get_backup_path(self) -> Path:
         if self.__config["backup-path"]:

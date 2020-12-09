@@ -10,9 +10,10 @@ class BackupThread(Thread):
     A thread to run the backup and
     update progressbar without freezing the gui
     """
-    def __init__(self, included_folders, backup_location, versions_to_keep, search_callback, copy_callback, use_tar=False):
+    def __init__(self, included_folders, excluded_folders, backup_location, versions_to_keep, search_callback, copy_callback, use_tar=False):
         super().__init__(name="backup")
         self.__included_folders = included_folders
+        self.__excluded_folders = excluded_folders
         self.__backup_location = backup_location
         self.__versions_to_keep = versions_to_keep
         self.__search_callback = search_callback
@@ -22,7 +23,7 @@ class BackupThread(Thread):
     def run(self):
         # delete prev backups, find files to backup, then do backup
         delete_prev_backups(self.__backup_location, self.__versions_to_keep)
-        files_to_backup = search_included(self.__included_folders, self.__search_callback)
+        files_to_backup = search_included(self.__included_folders, self.__excluded_folders, self.__search_callback)
         if self.__use_tar:
             copy_tar_files(files_to_backup, self.__backup_location, self.__copy_callback)
         else:

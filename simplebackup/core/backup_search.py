@@ -10,21 +10,26 @@ from pathlib import Path
 from ..const import BACKUP_DATESTAMP_UTC_REG
 
 
-def search_included(paths_to_scan: tuple, callback_progress=None) -> list:
+def search_included(paths_to_scan: tuple, paths_to_exclude: tuple, callback_progress=None) -> list:
     """
     walks the paths to scan using yield for each path
 
         :param paths_to_scan: tuple of Path obj of the
                               folder paths to walk
+        :param paths_to_exclude: tuple of Path obj to
+                                 skip scanning
         :param callback_progress: func to call when a
                                   file has been found,
                                   callback must accept one argument
                                   for whether it has finished search
-        :return: yields each new filepath found as Path obj
+        :return: list of each new filepath found as Path obj
     """
     found_paths = []
     for top in paths_to_scan:
-        for root, _dirs, files in os.walk(top):
+        for root, sub_dirs, files in os.walk(top):
+            # remove excluded paths by using a slice assignment
+            sub_dirs[:] = [d for d in sub_dirs if Path(root).joinpath(d) not in paths_to_exclude]
+            print(sub_dirs)
             if files:
                 for file in files:
                     found_paths.append(Path(root).joinpath(file))

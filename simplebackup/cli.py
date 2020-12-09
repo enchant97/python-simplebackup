@@ -17,6 +17,7 @@ class CLI:
         self.__app_config = Config_Handler(APP_CONFIG_PATH)
         self.__versions_to_keep = self.__app_config.get_versions_to_keep()
         self.__paths_to_backup = self.__app_config.get_included_folders()
+        self.__excluded_paths = self.__app_config.get_excluded_folders()
         self.__backup_path = self.__app_config.get_backup_path()
         self.__use_tar = self.__app_config.get_use_tar()
 
@@ -78,7 +79,11 @@ class CLI:
         if self.__backup_path:
             if self.__paths_to_backup:
                 delete_prev_backups(self.__backup_path, self.__versions_to_keep)
-                files_to_backup = search_included(self.__paths_to_backup, self.incr_search_prog)
+                files_to_backup = search_included(
+                    self.__paths_to_backup,
+                    self.__excluded_paths,
+                    self.incr_search_prog
+                    )
                 if self.__use_tar:
                     copy_tar_files(files_to_backup, self.__backup_path, self.incr_backed_up_prog)
                 else:
