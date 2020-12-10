@@ -10,14 +10,18 @@ from .core.copy_tar import copy_tar_files
 
 
 class CLI:
-    def __init__(self):
+    """
+    The main CLI of simplebackup
+    """
+    def __init__(self, **kwargs):
         self.__files_found = 0
         self.__files_backed_up = 0
 
-        self.__app_config = Config_Handler(APP_CONFIG_PATH)
+        config_fn = kwargs.get("config_fn", APP_CONFIG_PATH)
+        self.__app_config = Config_Handler(config_fn)
         self.__versions_to_keep = self.__app_config.get_versions_to_keep()
-        self.__paths_to_backup = self.__app_config.get_included_folders()
-        self.__excluded_paths = self.__app_config.get_excluded_folders()
+        self.__included_folders = self.__app_config.get_included_folders()
+        self.__excluded_folders = self.__app_config.get_excluded_folders()
         self.__backup_path = self.__app_config.get_backup_path()
         self.__use_tar = self.__app_config.get_use_tar()
 
@@ -26,7 +30,7 @@ class CLI:
         print("Written By Leo Spratt - GPL-3.0")
         print(f"Last Known Backup: {self.__app_config.human_last_backup}")
 
-    def add_path_to_backup(self):
+    def add_include_folder(self):
         while True:
             try:
                 path = input("Enter Path (or leave blank to go back): ")
@@ -34,8 +38,21 @@ class CLI:
                     break
                 else:
                     path = Path(path).resolve(strict=True)
-                    self.__paths_to_backup.append(path)
-                    self.__app_config.set_included_folders(self.__paths_to_backup)
+                    self.__included_folders.append(path)
+                    self.__app_config.set_included_folders(self.__included_folders)
+            except FileNotFoundError:
+                print("That path does not seem to exit!")
+
+    def add_exclude_folder(self):
+        while True:
+            try:
+                path = input("Enter Path (or leave blank to go back): ")
+                if not path:
+                    break
+                else:
+                    path = Path(path).resolve(strict=True)
+                    self.__excluded_folders.append(path)
+                    self.__app_config.set_excluded_folders(self.__excluded_folders)
             except FileNotFoundError:
                 print("That path does not seem to exit!")
 
@@ -77,11 +94,11 @@ class CLI:
 
     def backup(self):
         if self.__backup_path:
-            if self.__paths_to_backup:
+            if self.__included_folders:
                 delete_prev_backups(self.__backup_path, self.__versions_to_keep)
                 files_to_backup = search_included(
-                    self.__paths_to_backup,
-                    self.__excluded_paths,
+                    self.__included_folders,
+                    self.__excluded_folders,
                     self.incr_search_prog
                     )
                 if self.__use_tar:
@@ -107,29 +124,33 @@ class CLI:
         while True:
             print("\nMenu:")
             print("1. change backup path")
-            print("2. add a folder to backup")
-            print(f"3. change versions to keep ({self.__versions_to_keep})")
-            print("4. start folder backup")
+            print("2. add a folder to include in backup")
+            print("3. add a folder to exclude in backup")
+            print(f"4. change versions to keep ({self.__versions_to_keep})")
+            print("5. start backup")
             if self.__use_tar:
-                print("5. switch to folder type")
+                print("6. switch to folder type")
             else:
-                print("5. switch to tar type")
+                print("6. switch to tar type")
             print("q. quit")
+
             choice = input("Enter Your Choice: ")
             if choice == "q":
                 break
-            elif choice == "5":
+            elif choice == "6":
                 self.__use_tar = not self.__use_tar
                 self.__app_config.set_use_tar(self.__use_tar)
-            elif choice == "4":
+            elif choice == "5":
                 if self.backup():
                     break
                 else:
                     print("Failed To Copy")
-            elif choice == "3":
+            elif choice == "4":
                 self.change_versions_to_keep()
+            elif choice == "3":
+                self.add_exclude_folder()
             elif choice == "2":
-                self.add_path_to_backup()
+                self.add_include_folder()
             elif choice == "1":
                 self.change_backup_path()
             else:
