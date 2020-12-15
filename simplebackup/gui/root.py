@@ -165,7 +165,7 @@ class TkApp(Tk):
             if folder_path != self.__backup_location:
                 self.__included_folders.append(folder_path)
                 self.__included_folders_lb.insert(END, folder_path)
-                self.__app_config.set_included_folders(self.__curr_config, *self.__included_folders)
+                self.__app_config.set_included_folders(self.__curr_config, self.__included_folders)
             else:
                 messagebox.showwarning(
                     title="Folder Same As Backup Path",
@@ -183,7 +183,7 @@ class TkApp(Tk):
             if messagebox.askyesno("Confirm Delete", "Are you want to delete this folder?"):
                 index_to_del = curr_selection[0]
                 self.__included_folders.pop(index_to_del)
-                self.__app_config.set_included_folders(self.__curr_config, *self.__included_folders)
+                self.__app_config.set_included_folders(self.__curr_config, self.__included_folders)
                 self.__included_folders_lb.delete(index_to_del)
             self.deselect_included_folder()
 
@@ -197,7 +197,7 @@ class TkApp(Tk):
             folder_path = Path(folder)
             self.__excluded_folders.append(folder_path)
             self.__excluded_folders_lb.insert(END, folder_path)
-            self.__app_config.set_excluded_folders(self.__curr_config, *self.__excluded_folders)
+            self.__app_config.set_excluded_folders(self.__curr_config, self.__excluded_folders)
 
     def remove_selected_excluded_folder(self, *args):
         """
@@ -212,7 +212,7 @@ class TkApp(Tk):
             if messagebox.askyesno("Confirm Delete", "Are you want to delete this folder?"):
                 index_to_del = curr_selection[0]
                 self.__excluded_folders.pop(index_to_del)
-                self.__app_config.set_excluded_folders(self.__curr_config, *self.__excluded_folders)
+                self.__app_config.set_excluded_folders(self.__curr_config, self.__excluded_folders)
                 self.__excluded_folders_lb.delete(index_to_del)
             self.deselect_excluded_folder()
 

@@ -19,16 +19,18 @@ class CLI:
 
         config_fn = kwargs.get("config_fn", APP_CONFIG_PATH)
         self.__app_config = Config_Handler(config_fn)
-        self.__versions_to_keep = self.__app_config.get_versions_to_keep()
-        self.__included_folders = self.__app_config.get_included_folders()
-        self.__excluded_folders = self.__app_config.get_excluded_folders()
-        self.__backup_path = self.__app_config.get_backup_path()
-        self.__use_tar = self.__app_config.get_use_tar()
+
+        self.__curr_config = self.__app_config.default_config_i
+        self.__versions_to_keep = self.__app_config.get_versions_to_keep(self.__curr_config)
+        self.__included_folders = self.__app_config.get_included_folders(self.__curr_config)
+        self.__excluded_folders = self.__app_config.get_excluded_folders(self.__curr_config)
+        self.__backup_path = self.__app_config.get_backup_path(self.__curr_config)
+        self.__use_tar = self.__app_config.get_use_tar(self.__curr_config)
 
     def show_welcome(self):
         print("Simple Backup CLI Mode | V" + __version__)
         print("Written By Leo Spratt - GPL-3.0")
-        print(f"Last Known Backup: {self.__app_config.human_last_backup}")
+        print(f"Last Known Backup: {self.__app_config.get_human_last_backup(self.__curr_config)}")
 
     def add_include_folder(self):
         while True:
@@ -39,7 +41,7 @@ class CLI:
                 else:
                     path = Path(path).resolve(strict=True)
                     self.__included_folders.append(path)
-                    self.__app_config.set_included_folders(self.__included_folders)
+                    self.__app_config.set_included_folders(self.__curr_config, self.__included_folders)
             except FileNotFoundError:
                 print("That path does not seem to exit!")
 
@@ -52,7 +54,7 @@ class CLI:
                 else:
                     path = Path(path).resolve(strict=True)
                     self.__excluded_folders.append(path)
-                    self.__app_config.set_excluded_folders(self.__excluded_folders)
+                    self.__app_config.set_excluded_folders(self.__curr_config, self.__excluded_folders)
             except FileNotFoundError:
                 print("That path does not seem to exit!")
 
@@ -64,7 +66,7 @@ class CLI:
                     break
                 path = Path(path).resolve(strict=True)
                 self.__backup_path = path
-                self.__app_config.set_backup_path(self.__backup_path)
+                self.__app_config.set_backup_path(self.__curr_config, self.__backup_path)
             except FileNotFoundError:
                 print("That path does not seem to exit!")
 
@@ -72,7 +74,7 @@ class CLI:
         while True:
             try:
                 self.__versions_to_keep = int(input("Enter Number Of Versions To Keep: "))
-                self.__app_config.set_versions_to_keep(self.__versions_to_keep)
+                self.__app_config.set_versions_to_keep(self.__curr_config, self.__versions_to_keep)
                 break
             except ValueError:
                 print("Invalid Input!")
@@ -111,7 +113,7 @@ class CLI:
                 while True:
                     input()
                     if self.__files_backed_up == self.__files_found:
-                        self.__app_config.set_last_backup(datetime.utcnow())
+                        self.__app_config.set_last_backup(self.__curr_config, datetime.utcnow())
                         break
                 return True
             else:
@@ -139,7 +141,7 @@ class CLI:
                 break
             elif choice == "6":
                 self.__use_tar = not self.__use_tar
-                self.__app_config.set_use_tar(self.__use_tar)
+                self.__app_config.set_use_tar(self.__curr_config, self.__use_tar)
             elif choice == "5":
                 if self.backup():
                     break

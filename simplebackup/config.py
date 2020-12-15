@@ -106,11 +106,11 @@ class Config_Handler:
         else:
             raise ValueError("Invalid config index")
 
-    def set_included_folders(self, config_i: int, *locations):
+    def set_included_folders(self, config_i: int, locations: list):
         self.__config["configs"][config_i]["included-folders"] = [str(i) for i in locations]
         self.__write()
 
-    def set_excluded_folders(self, config_i: int, *locations):
+    def set_excluded_folders(self, config_i: int, locations: list):
         self.__config["configs"][config_i]["excluded-folders"] = [str(i) for i in locations]
         self.__write()
 
