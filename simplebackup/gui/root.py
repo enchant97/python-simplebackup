@@ -21,6 +21,7 @@ class TkApp(Tk):
         super().__init__()
         title = "Simple Backup | V" + __version__
         self.wm_title(title)
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
         self.__thread = None
         self.__files_found = 0
@@ -37,6 +38,7 @@ class TkApp(Tk):
         self.__menu_config.add_command(label="New", command=self.new_config)
         self.__menu_config.add_command(label="Load", command=self.switch_config)
         self.__menu_config.add_command(label="Change Default", command=self.change_default_config)
+        self.__menu_config.add_command(label="Rename Current", command=self.rename_curr_conf)
         self.__menu_config.add_separator()
         self.__menu_config.add_command(label="Delete Current", command=self.delete_current_config)
         self.__menu_config.add_command(label="Delete All", command=self.reset_config)
@@ -71,6 +73,13 @@ class TkApp(Tk):
         self.__statusbar = Label(self, text="ok", relief=SUNKEN, anchor=W)
         self._load_display()
         self._layout()
+
+    def on_closing(self):
+        if self.__files_found != self.__files_copied:
+            if messagebox.askyesno("Backup Running", "Do you want to stop the backup?"):
+                self.destroy()
+        else:
+            self.destroy()
 
     def _load_display(self):
         """
@@ -112,6 +121,16 @@ class TkApp(Tk):
         next_combo = ask_combobox("Default Config", "Config Name", self.__app_config.get_config_names())
         if next_combo != None:
             self.__app_config.default_config_i = next_combo
+
+    def rename_curr_conf(self):
+        """
+        rename a existing config,
+        will ask the user in a popup string input
+        """
+        new_name = simpledialog.askstring("Rename Config", "New Name")
+        if new_name:
+            self.__app_config.rename_config(self.__curr_config, new_name)
+            self._load_display()
 
     def new_config(self):
         """
@@ -329,20 +348,20 @@ It is licenced under GPL-3.0""")
 
     def _layout(self):
         self.config(menu=self.__menu)
-        self.__title_l.pack(fill=X, pady=10)
-        self.__curr_config_name_l.pack(fill=X)
-        self.__last_backup_l.pack(fill=X)
-        self.__set_versions_to_keep.pack(fill=X)
-        self.__versions_to_keep_l.pack(fill=X)
-        self.__inc_folder_bnt.pack(fill=X)
-        self.__included_folders_lb.pack(fill=X)
-        self.__excl_folder_bnt.pack(fill=X)
-        self.__excluded_folders_lb.pack(fill=X)
-        self.__backup_to_bnt.pack(fill=X)
-        self.__backup_folder_l.pack(fill=X)
-        self.__use_tar_l.pack(fill=X)
-        self.__use_tar.pack(fill=X)
-        self.__backup_start_bnt.pack(fill=X)
+        self.__title_l.pack(fill=X, pady=10, padx=5)
+        self.__curr_config_name_l.pack(fill=X, padx=5)
+        self.__last_backup_l.pack(fill=X, padx=5)
+        self.__set_versions_to_keep.pack(fill=X, padx=5)
+        self.__versions_to_keep_l.pack(fill=X, padx=5)
+        self.__inc_folder_bnt.pack(fill=X, padx=5)
+        self.__included_folders_lb.pack(fill=X, padx=5)
+        self.__excl_folder_bnt.pack(fill=X, padx=5)
+        self.__excluded_folders_lb.pack(fill=X, padx=5)
+        self.__backup_to_bnt.pack(fill=X, padx=5)
+        self.__backup_folder_l.pack(fill=X, padx=5)
+        self.__use_tar_l.pack(fill=X, padx=5)
+        self.__use_tar.pack(fill=X, padx=5)
+        self.__backup_start_bnt.pack(fill=X, padx=5)
         self.__progress.pack(fill=X)
         self.__statusbar.pack(side=BOTTOM, fill=X)
         self.wm_minsize(300, self.winfo_height())

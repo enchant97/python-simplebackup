@@ -75,6 +75,16 @@ class Config_Handler:
         """
         return self.__config["configs"][config_i]["name"]
 
+    def rename_config(self, config_i: int, new_name: str):
+        """
+        rename an existing backup config
+
+        :param config_i: the config index
+        :param new_name: the new config name
+        """
+        self.__config["configs"][config_i]["name"] = new_name
+        self.__write()
+
     def remove_config(self, config_i: int):
         """
         removes a specific backup config,
