@@ -225,7 +225,7 @@ class TkApp(Tk):
         will ask the user to confirm
         """
 
-        curr_selection = self.__included_folders_lb.curselection()
+        curr_selection = self.__excluded_folders_lb.curselection()
         # check if there is a selection
         if curr_selection:
             if messagebox.askyesno("Confirm Delete", "Are you want to delete this folder?"):
