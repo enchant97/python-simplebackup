@@ -10,6 +10,7 @@ from .. import __version__
 from ..config import Config_Handler
 from ..const import APP_CONFIG_PATH, UPDATE_URL
 from .backup_thread import BackupThread
+from .simpledialog_extra import ask_combobox
 
 
 class TkApp(Tk):
@@ -27,47 +28,102 @@ class TkApp(Tk):
 
         config_fn = kwargs.get("config_fn", APP_CONFIG_PATH)
         self.__app_config = Config_Handler(config_fn)
-        self.__versions_to_keep = self.__app_config.get_versions_to_keep()
-        self.__included_folders = self.__app_config.get_included_folders()
-        self.__excluded_folders = self.__app_config.get_excluded_folders()
-        self.__backup_location = self.__app_config.get_backup_path()
+        self.__curr_config = self.__app_config.default_config_i
 
         self.__menu = Menu(self)
         self.__menu_file = Menu(self.__menu, tearoff=0)
         self.__menu_file.add_command(label="Quit", command=self.quit)
+        self.__menu_config = Menu(self.__menu, tearoff=0)
+        self.__menu_config.add_command(label="New", command=self.new_config)
+        self.__menu_config.add_command(label="Load", command=self.switch_config)
+        self.__menu_config.add_command(label="Change Default", command=self.change_default_config)
+        self.__menu_config.add_separator()
+        self.__menu_config.add_command(label="Delete Current")#TODO impl these commands
+        self.__menu_config.add_command(label="Delete All")#TODO impl these commands
         self.__menu_help = Menu(self.__menu, tearoff=0)
         self.__menu_help.add_command(label="Check for Updates", command=self.show_update_popup)
         self.__menu_help.add_command(label="About", command=self.show_about_popup)
         self.__menu.add_cascade(label="File", menu=self.__menu_file)
+        self.__menu.add_cascade(label="Config", menu=self.__menu_config)
         self.__menu.add_cascade(label="Help", menu=self.__menu_help)
 
-        self.__title_l = Label(self, text=title)
-        self.__last_backup_l = Label(self, text=f"Last Known Backup: {self.__app_config.human_last_backup}")
+        self.__title_l = Label(self, text=title, font=(16))
+        self.__curr_config_name_l = Label(self)
+        self.__last_backup_l = Label(self)
         self.__set_versions_to_keep = Button(self, text="Set Versions To Keep", command=self.update_versions_to_keep)
-        self.__versions_to_keep_l = Label(self, text=self.__versions_to_keep)
+        self.__versions_to_keep_l = Label(self)
         self.__inc_folder_bnt = Button(self, text="Include Another Folder", command=self.add_included_folder)
         self.__included_folders_lb = Listbox(self, height=4)
         self.__included_folders_lb.bind("<<ListboxSelect>>", self.remove_selected_included_folder)
         self.__included_folders_lb.bind('<FocusOut>', self.deselect_included_folder)
-        self.__included_folders_lb.insert(0, *self.__included_folders)
         self.__excl_folder_bnt = Button(self, text="Exclude Another Folder", command=self.add_excluded_folder)
         self.__excluded_folders_lb = Listbox(self, height=4)
         self.__excluded_folders_lb.bind("<<ListboxSelect>>", self.remove_selected_excluded_folder)
         self.__excluded_folders_lb.bind('<FocusOut>', self.deselect_excluded_folder)
-        self.__excluded_folders_lb.insert(0, *self.__excluded_folders)
         self.__backup_to_bnt = Button(self, text="Backup Folder", command=self.set_backup_folder)
-        self.__backup_folder_l = Label(self, text=str(self.__backup_location))
+        self.__backup_folder_l = Label(self)
         self.__use_tar_l = Label(self, text="Use Tar")
-        self.__use_tar_var = BooleanVar(self, self.__app_config.get_use_tar())
+        self.__use_tar_var = BooleanVar(self)
         self.__use_tar_var.trace_add("write", self.use_tar_changed)
         self.__use_tar = Checkbutton(self, variable=self.__use_tar_var)
         self.__backup_start_bnt = Button(self, text="Start Backup", command=self.start_backup)
         self.__progress = Progressbar(self)
         self.__statusbar = Label(self, text="ok", relief=SUNKEN, anchor=W)
+        self._load_display()
         self._layout()
 
+    def _load_display(self):
+        """
+        load the widgets with data from the current backup config,
+        should be run after loading a config from file and at app launch
+        """
+        self.__versions_to_keep = self.__app_config.get_versions_to_keep(self.__curr_config)
+        self.__included_folders = self.__app_config.get_included_folders(self.__curr_config)
+        self.__excluded_folders = self.__app_config.get_excluded_folders(self.__curr_config)
+        self.__backup_location = self.__app_config.get_backup_path(self.__curr_config)
+
+        curr_conf_name = self.__app_config.get_config_name(self.__curr_config)
+        self.__curr_config_name_l.config(text=f"Config Name: {curr_conf_name}")
+        self.__last_backup_l.config(text=f"Last Known Backup: {self.__app_config.get_human_last_backup(self.__curr_config)}")
+        self.__versions_to_keep_l.config(text=self.__versions_to_keep)
+        self.__included_folders_lb.delete(0, END)
+        self.__included_folders_lb.insert(0, *self.__included_folders)
+        self.__excluded_folders_lb.delete(0, END)
+        self.__excluded_folders_lb.insert(0, *self.__excluded_folders)
+        self.__backup_folder_l.config(text=str(self.__backup_location))
+        self.__use_tar_var.set(self.__app_config.get_use_tar(self.__curr_config))
+
+    def switch_config(self):
+        """
+        switches what config to use for backup,
+        asks the user for a config to load,
+        then loads the display
+        """
+        next_combo = ask_combobox("Load Config", "Config Name", self.__app_config.get_config_names())
+        if next_combo != None:
+            self.__curr_config = next_combo
+            self._load_display()
+
+    def change_default_config(self):
+        """
+        switches what config to use for the default backup,
+        asks the user for a config to load
+        """
+        next_combo = ask_combobox("Default Config", "Config Name", self.__app_config.get_config_names())
+        if next_combo != None:
+            self.__app_config.default_config_i = next_combo
+
+    def new_config(self):
+        """
+        creates a new empty backup config,
+        asks the user for config name
+        """
+        name = simpledialog.askstring("New Config", "Config Name")
+        if name:
+            self.__app_config.create_config(name)
+
     def use_tar_changed(self, *args):
-        self.__app_config.set_use_tar(self.__use_tar_var.get())
+        self.__app_config.set_use_tar(self.__curr_config, self.__use_tar_var.get())
 
     def update_versions_to_keep(self):
         """
@@ -77,7 +133,7 @@ class TkApp(Tk):
         new_val = simpledialog.askinteger("Versions To Keep", "How many backups do you want to keep")
         if new_val != self.__versions_to_keep and new_val != None:
             self.__versions_to_keep = new_val
-            self.__app_config.set_versions_to_keep(self.__versions_to_keep)
+            self.__app_config.set_versions_to_keep(self.__curr_config, self.__versions_to_keep)
             self.__versions_to_keep_l.config(text=self.__versions_to_keep)
 
     def deselect_included_folder(self, *args):
@@ -97,7 +153,7 @@ class TkApp(Tk):
             if folder_path != self.__backup_location:
                 self.__included_folders.append(folder_path)
                 self.__included_folders_lb.insert(END, folder_path)
-                self.__app_config.set_included_folders(*self.__included_folders)
+                self.__app_config.set_included_folders(self.__curr_config, *self.__included_folders)
             else:
                 messagebox.showwarning(
                     title="Folder Same As Backup Path",
@@ -115,7 +171,7 @@ class TkApp(Tk):
             if messagebox.askyesno("Confirm Delete", "Are you want to delete this folder?"):
                 index_to_del = curr_selection[0]
                 self.__included_folders.pop(index_to_del)
-                self.__app_config.set_included_folders(*self.__included_folders)
+                self.__app_config.set_included_folders(self.__curr_config, *self.__included_folders)
                 self.__included_folders_lb.delete(index_to_del)
             self.deselect_included_folder()
 
@@ -129,7 +185,7 @@ class TkApp(Tk):
             folder_path = Path(folder)
             self.__excluded_folders.append(folder_path)
             self.__excluded_folders_lb.insert(END, folder_path)
-            self.__app_config.set_included_folders(*self.__excluded_folders)
+            self.__app_config.set_excluded_folders(self.__curr_config, *self.__excluded_folders)
 
     def remove_selected_excluded_folder(self, *args):
         """
@@ -144,7 +200,7 @@ class TkApp(Tk):
             if messagebox.askyesno("Confirm Delete", "Are you want to delete this folder?"):
                 index_to_del = curr_selection[0]
                 self.__excluded_folders.pop(index_to_del)
-                self.__app_config.set_excluded_folders(*self.__excluded_folders)
+                self.__app_config.set_excluded_folders(self.__curr_config, *self.__excluded_folders)
                 self.__excluded_folders_lb.delete(index_to_del)
             self.deselect_excluded_folder()
 
@@ -156,7 +212,7 @@ class TkApp(Tk):
         if folder:
             self.__backup_location = Path(folder)
             self.__backup_folder_l.config(text=folder)
-            self.__app_config.set_backup_path(self.__backup_location)
+            self.__app_config.set_backup_path(self.__curr_config, self.__backup_location)
 
     def enable_gui(self):
         """
@@ -209,8 +265,8 @@ class TkApp(Tk):
         self.__progress.config(value=self.__files_copied)
         self.__statusbar.config(text=f"Copying Files {self.__files_copied} of {self.__files_found}")
         if self.__files_copied == self.__files_found:
-            self.__app_config.set_last_backup(datetime.utcnow())
-            self.__last_backup_l.config(text=f"Last Known Backup: {self.__app_config.human_last_backup}")
+            self.__app_config.set_last_backup(self.__curr_config, datetime.utcnow())
+            self.__last_backup_l.config(text=f"Last Known Backup: {self.__app_config.get_human_last_backup(self.__curr_config)}")
             self.__statusbar.config(text=f"Finished Copying Files")
             messagebox.showinfo(title="Finished Copying Files", message="Finished copying all found files")
             # reset counters
@@ -261,7 +317,8 @@ It is licenced under GPL-3.0""")
 
     def _layout(self):
         self.config(menu=self.__menu)
-        self.__title_l.pack(fill=X)
+        self.__title_l.pack(fill=X, pady=10)
+        self.__curr_config_name_l.pack(fill=X)
         self.__last_backup_l.pack(fill=X)
         self.__set_versions_to_keep.pack(fill=X)
         self.__versions_to_keep_l.pack(fill=X)
