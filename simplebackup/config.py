@@ -43,30 +43,45 @@ class Config_Handler:
         resets the config file,
         or initialise a new file
         """
-        self.__config = BASE_CONF_FILE
+        self.__config = dict(BASE_CONF_FILE)
         self.__write()
 
     def create_config(self, name: str):
         """
         adds a new config at the end of the configs list
 
-        :param name: the name of the config
+            :param name: the name of the config
         """
-        config = BASE_CONF
+        config = dict(BASE_CONF)
         config["name"] = name
         self.__config["configs"].append(config)
         self.__write()
 
-    def get_config_names(self):
+    def get_config_names(self) -> tuple:
+        """
+        will return all the config names,
+        with the specific index they are
+        """
         names = []
         for i in range(len(self.__config["configs"])):
             names.append(self.__config["configs"][i]["name"])
-        return names
+        return tuple(names)
 
-    def get_config_name(self, config_i: int):
+    def get_config_name(self, config_i: int) -> str:
+        """
+        returns the config name for the specific index given
+
+            :param config_i: the config index
+        """
         return self.__config["configs"][config_i]["name"]
 
     def remove_config(self, config_i: int):
+        """
+        removes a specific backup config,
+        will create a default if deleting the last config
+
+            :param config_i: the config index
+        """
         if config_i == self.default_config_i:
             # if the config to delete is the current change current index to 0
             self.default_config_i = 0

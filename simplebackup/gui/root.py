@@ -38,8 +38,8 @@ class TkApp(Tk):
         self.__menu_config.add_command(label="Load", command=self.switch_config)
         self.__menu_config.add_command(label="Change Default", command=self.change_default_config)
         self.__menu_config.add_separator()
-        self.__menu_config.add_command(label="Delete Current")#TODO impl these commands
-        self.__menu_config.add_command(label="Delete All")#TODO impl these commands
+        self.__menu_config.add_command(label="Delete Current", command=self.delete_current_config)
+        self.__menu_config.add_command(label="Delete All", command=self.reset_config)
         self.__menu_help = Menu(self.__menu, tearoff=0)
         self.__menu_help.add_command(label="Check for Updates", command=self.show_update_popup)
         self.__menu_help.add_command(label="About", command=self.show_about_popup)
@@ -121,6 +121,18 @@ class TkApp(Tk):
         name = simpledialog.askstring("New Config", "Config Name")
         if name:
             self.__app_config.create_config(name)
+
+    def delete_current_config(self):
+        if messagebox.askyesno("Confirm Delete", "Are you sure you want to delete the current config?"):
+            self.__app_config.remove_config(self.__curr_config)
+            self.__curr_config = self.__app_config.default_config_i
+            self._load_display()
+
+    def reset_config(self):
+        if messagebox.askyesno("Confirm Reset", "Are you sure you want to reset the all configurations?"):
+            self.__app_config.reset_config()
+            self.__curr_config = self.__app_config.default_config_i
+            self._load_display()
 
     def use_tar_changed(self, *args):
         self.__app_config.set_use_tar(self.__curr_config, self.__use_tar_var.get())
