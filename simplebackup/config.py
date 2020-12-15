@@ -44,9 +44,10 @@ class Config_Handler:
         or initialise a new file
         """
         self.__config = dict(BASE_CONF_FILE)
-        self.__write()
+        self.create_config("default")
+        # no write here as there is one in create_config()
 
-    def create_config(self, name: str):
+    def create_config(self, name: str) -> int:
         """
         adds a new config at the end of the configs list
 
