@@ -29,7 +29,6 @@ def search_included(paths_to_scan: tuple, paths_to_exclude: tuple, callback_prog
         for root, sub_dirs, files in os.walk(top):
             # remove excluded paths by using a slice assignment
             sub_dirs[:] = [d for d in sub_dirs if Path(root).joinpath(d) not in paths_to_exclude]
-            print(sub_dirs)
             if files:
                 for file in files:
                     found_paths.append(Path(root).joinpath(file))
