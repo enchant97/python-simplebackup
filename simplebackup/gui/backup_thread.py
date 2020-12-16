@@ -10,6 +10,14 @@ class BackupThread(Thread):
     """
     A thread to run the backup and
     update progressbar without freezing the gui
+
+        :param included_folders: the included folders
+        :param excluded_folders: the excluded folders
+        :param backup_location: where backups are stored
+        :param versions_to_keep: the number of backups to keep
+        :param search_callback: func to call each time a file is found
+        :param copy_callback: func to call each time copy has finished
+        :param use_tar: whether to use tar backups, defaults to False
     """
     def __init__(self, included_folders, excluded_folders, backup_location, versions_to_keep, search_callback, copy_callback, use_tar=False):
         super().__init__(name="backup")

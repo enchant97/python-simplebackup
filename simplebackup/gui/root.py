@@ -75,6 +75,9 @@ class TkApp(Tk):
         self._layout()
 
     def on_closing(self):
+        """
+        called on window close
+        """
         if self.__files_found != self.__files_copied:
             if messagebox.askyesno("Backup Running", "Do you want to stop the backup?"):
                 self.destroy()
@@ -142,18 +145,27 @@ class TkApp(Tk):
             self.__app_config.create_config(name)
 
     def delete_current_config(self):
+        """
+        deletes the current selected config, asks the user to confirm
+        """
         if messagebox.askyesno("Confirm Delete", "Are you sure you want to delete the current config?"):
             self.__app_config.remove_config(self.__curr_config)
             self.__curr_config = self.__app_config.default_config_i
             self._load_display()
 
     def reset_config(self):
+        """
+        resets all the user configs, asks the user to confirm
+        """
         if messagebox.askyesno("Confirm Reset", "Are you sure you want to reset the all configurations?"):
             self.__app_config.reset_config()
             self.__curr_config = self.__app_config.default_config_i
             self._load_display()
 
     def use_tar_changed(self, *args):
+        """
+        called each time the __use_tar_var is called
+        """
         self.__app_config.set_use_tar(self.__curr_config, self.__use_tar_var.get())
 
     def update_versions_to_keep(self):
@@ -168,9 +180,15 @@ class TkApp(Tk):
             self.__versions_to_keep_l.config(text=self.__versions_to_keep)
 
     def deselect_included_folder(self, *args):
+        """
+        deselects the selected element in included folder
+        """
         self.__included_folders_lb.selection_clear(0, END)
 
     def deselect_excluded_folder(self, *args):
+        """
+        deselects the selected element in excluded folder
+        """
         self.__excluded_folders_lb.selection_clear(0, END)
 
     def add_included_folder(self):
@@ -337,6 +355,9 @@ class TkApp(Tk):
             self.__thread.start()
 
     def show_about_popup(self):
+        """
+        show the about popup
+        """
         messagebox.showinfo(
             "About",
             "simplebackup V" + __version__ + """ is cross-platform backup program written in python.
@@ -344,6 +365,9 @@ This app was made by enchant97/Leo Spratt.
 It is licenced under GPL-3.0""")
 
     def show_update_popup(self):
+        """
+        open the default webbrowser to the update url
+        """
         webbrowser.open(UPDATE_URL)
 
     def _layout(self):
