@@ -5,7 +5,7 @@ import tarfile
 from datetime import datetime
 from pathlib import Path
 
-from ..const import BACKUP_DATESTAMP_UTC
+from ..core.const import BACKUP_DATESTAMP_UTC
 from ..core.logging import logger
 
 

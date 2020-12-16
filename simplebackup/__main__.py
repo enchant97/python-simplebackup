@@ -2,7 +2,7 @@ import logging
 import sys
 
 from .cli import CLI
-from .const import LOGGING_PATH
+from .core.const import LOGGING_PATH
 from .gui import TkApp
 
 if __name__ == "__main__":

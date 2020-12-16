@@ -8,7 +8,7 @@ from datetime import datetime
 from functools import partial
 from pathlib import Path
 
-from ..const import BACKUP_DATESTAMP_UTC
+from ..core.const import BACKUP_DATESTAMP_UTC
 from ..core.logging import logger
 
 

@@ -7,7 +7,7 @@ import re
 import shutil
 from pathlib import Path
 
-from ..const import BACKUP_DATESTAMP_UTC_REG
+from ..core.const import BACKUP_DATESTAMP_UTC_REG
 from ..core.logging import logger
 
 
