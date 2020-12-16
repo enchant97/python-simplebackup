@@ -8,6 +8,7 @@ import shutil
 from pathlib import Path
 
 from ..const import BACKUP_DATESTAMP_UTC_REG
+from ..core.logging import logger
 
 
 def search_included(paths_to_scan: tuple, paths_to_exclude: tuple, callback_progress=None) -> list:
@@ -31,10 +32,13 @@ def search_included(paths_to_scan: tuple, paths_to_exclude: tuple, callback_prog
             sub_dirs[:] = [d for d in sub_dirs if Path(root).joinpath(d) not in paths_to_exclude]
             if files:
                 for file in files:
-                    found_paths.append(Path(root).joinpath(file))
+                    full_path = Path(root).joinpath(file)
+                    logger.debug("Searching found a file: \"%s\"", full_path)
+                    found_paths.append(full_path)
                     if callback_progress:
                         # call progress callback to say file has been found
                         callback_progress()
+    logger.debug("Finished finding files")
     if callback_progress:
         callback_progress(True)
     return found_paths
@@ -52,6 +56,7 @@ def find_prev_backups(root_backup_path: Path, name_re=BACKUP_DATESTAMP_UTC_REG):
     """
     for path in root_backup_path.iterdir():
         if re.match(name_re, path.name):
+            logger.debug("Searching found a previous backup: \"%s\"", path)
             yield path
 
 def delete_prev_backups(root_backup_path: Path, versions_to_keep=2) -> int:
@@ -66,18 +71,23 @@ def delete_prev_backups(root_backup_path: Path, versions_to_keep=2) -> int:
     prev_backups = [i for i in find_prev_backups(root_backup_path)]
     if (versions_to_keep >= 0) and (len(prev_backups) >= versions_to_keep):
         prev_backups = sorted(prev_backups, reverse=True)
+        logger.debug("Sorted previous backups: \"%s\"", prev_backups)
         difference = (len(prev_backups) - versions_to_keep) + 1
+        logger.debug("Difference of previous backups: \"%s\"", difference)
         for i in range(difference):
             try:
                 curr_backup_path = prev_backups[i - 1]
                 if curr_backup_path.is_dir():
+                    logger.debug("Deleting a folder backup: \"%s\"", curr_backup_path)
                     # removes folder backups
                     shutil.rmtree(curr_backup_path)
                 else:
+                    logger.debug("Deleting a tar backup: \"%s\"", curr_backup_path)
                     # removes file backups
                     os.remove(curr_backup_path)
                 backups_deleted += 1
             except FileNotFoundError:
                 # we don't need to do anything as we were trying to delete anyway
                 pass
+    logger.debug("Finished deleting backups")
     return backups_deleted

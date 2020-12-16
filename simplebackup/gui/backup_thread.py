@@ -3,6 +3,7 @@ from threading import Thread
 from ..core.backup_search import delete_prev_backups, search_included
 from ..core.copy_folder import copy_files, create_backup_folder
 from ..core.copy_tar import copy_tar_files
+from ..core.logging import logger
 
 
 class BackupThread(Thread):
@@ -21,11 +22,18 @@ class BackupThread(Thread):
         self.__use_tar = use_tar
 
     def run(self):
+        logger.debug("Starting backup thread")
         # delete prev backups, find files to backup, then do backup
         delete_prev_backups(self.__backup_location, self.__versions_to_keep)
+        logger.debug("Finished deleting previous backups")
         files_to_backup = search_included(self.__included_folders, self.__excluded_folders, self.__search_callback)
+        logger.debug("Finished searching for files to backup")
         if self.__use_tar:
+            logger.debug("Running tar type backup")
             copy_tar_files(files_to_backup, self.__backup_location, self.__copy_callback)
         else:
+            logger.debug("Creating backup folder")
             backup_folder = create_backup_folder(self.__backup_location)
+            logger.debug("Running folder type backup")
             copy_files(backup_folder, files_to_backup, self.__copy_callback)
+        logger.debug("Stopping backup thread")
