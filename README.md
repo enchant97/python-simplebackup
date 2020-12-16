@@ -9,10 +9,11 @@ A Python3 app designed to be simple to use and efficient.
 ## How To Run
 - You can either run from the directory you downloaded it to or install it as a python package using the `setup.py` file
 - For CLI version run `python3 -m simplebackup`
-- For GUI version run `python3 -m simplebackup gui`
+- For GUI version run
+  - `python3 -m simplebackup gui`
+  - or run the `simple-backup.pyw` file
+  - download the exe file for Windows 64bit systems
 
 ## TODO
-- Ability to skip backing up certain folders
-- Add doc-strings to all functions/classes
 - Restore function
-- Multiple backup configs
+- Rewrite CLI code for how the user would issue commands
