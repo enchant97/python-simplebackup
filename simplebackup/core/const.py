@@ -1,5 +1,6 @@
 from .. import MODULE_PATH
 
+SYSTEM_FILES = ("Thumbs.db", "thumbs.db", ".DS_Store")
 HUMAN_READABLE_TIMESTAMP = "%Y-%m-%d %H.%M.%S"
 UTC_TIMESTAMP = "%Y-%m-%dT%H.%M.%SZ"
 BACKUP_DATESTAMP_UTC = f"BACKUP {UTC_TIMESTAMP}"

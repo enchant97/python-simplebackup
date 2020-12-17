@@ -7,13 +7,28 @@ import re
 import shutil
 from pathlib import Path
 
-from ..core.const import BACKUP_DATESTAMP_UTC_REG
+from ..core.const import BACKUP_DATESTAMP_UTC_REG, SYSTEM_FILES
 from ..core.logging import logger
 
 
+def is_system_file(file_path: Path, system_files=SYSTEM_FILES) -> bool:
+    """
+    used to check whether the file is a system file
+
+        :param file_path: a pathlib.Path to check
+        :param system_files: the list/tuple that contains
+                            the known systems files,
+                            defaults to SYSTEM_FILES
+        :return: whether it is a recognised system file
+    """
+    if file_path.name in system_files:
+        return True
+    return False
+
 def search_included(paths_to_scan: tuple, paths_to_exclude: tuple, callback_progress=None) -> list:
     """
-    walks the paths to scan using yield for each path
+    walks the paths to scan using yield for each path,
+    skips known system files
 
         :param paths_to_scan: tuple of Path obj of the
                               folder paths to walk
@@ -32,12 +47,16 @@ def search_included(paths_to_scan: tuple, paths_to_exclude: tuple, callback_prog
             sub_dirs[:] = [d for d in sub_dirs if Path(root).joinpath(d) not in paths_to_exclude]
             if files:
                 for file in files:
+                    # combine filename and root path
                     full_path = Path(root).joinpath(file)
-                    logger.debug("Searching found a file: \"%s\"", full_path)
-                    found_paths.append(full_path)
-                    if callback_progress:
-                        # call progress callback to say file has been found
-                        callback_progress()
+                    if is_system_file(full_path):
+                        logger.debug("Skipping system file: \"%s\"", full_path)
+                    else:
+                        logger.debug("Searching found a file: \"%s\"", full_path)
+                        found_paths.append(full_path)
+                        if callback_progress:
+                            # call progress callback to say file has been found
+                            callback_progress()
     logger.debug("Finished finding files")
     if callback_progress:
         callback_progress(True)
