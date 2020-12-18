@@ -83,15 +83,18 @@ def delete_prev_backups(root_backup_path: Path, versions_to_keep=2) -> int:
     deletes older backups keeping the amount of versions given
 
         :param root_backup_path: root path of all backups
-        :param versions_to_keep: versions to keep
+        :param versions_to_keep: versions to keep, defaults to 2
         :return: the number of backups deleted
     """
+    if versions_to_keep < 0:
+        # make sure we dont have negative numbers
+        versions_to_keep = 0
     backups_deleted = 0
     prev_backups = [i for i in find_prev_backups(root_backup_path)]
     if (versions_to_keep >= 0) and (len(prev_backups) >= versions_to_keep):
         prev_backups = sorted(prev_backups, reverse=True)
         logger.debug("Sorted previous backups: \"%s\"", prev_backups)
-        difference = (len(prev_backups) - versions_to_keep) + 1
+        difference = len(prev_backups) - versions_to_keep
         logger.debug("Difference of previous backups: \"%s\"", difference)
         for i in range(difference):
             try:
