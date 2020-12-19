@@ -8,8 +8,8 @@ from datetime import datetime
 from functools import partial
 from pathlib import Path
 
-from ..core.const import BACKUP_DATESTAMP_UTC, ERROR_TYPES
-from ..core.logging import logger
+from ...core.const import BACKUP_DATESTAMP_UTC, ERROR_TYPES
+from ...core.logging import logger
 
 
 def copy_file(file_path: Path, backup_root: Path, callback_progress=None):

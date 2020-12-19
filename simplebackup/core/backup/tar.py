@@ -5,8 +5,8 @@ import tarfile
 from datetime import datetime
 from pathlib import Path
 
-from ..core.const import BACKUP_DATESTAMP_UTC, ERROR_TYPES
-from ..core.logging import logger
+from ...core.const import BACKUP_DATESTAMP_UTC, ERROR_TYPES
+from ...core.logging import logger
 
 
 def copy_tar_files(file_paths, backup_root: Path, callback_progress=None, error_callback=None):

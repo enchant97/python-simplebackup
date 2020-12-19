@@ -1,8 +1,8 @@
 from threading import Thread
 
-from ..core.backup_search import delete_prev_backups, search_included
-from ..core.copy_folder import copy_files, create_backup_folder
-from ..core.copy_tar import copy_tar_files
+from ..core.backup.search import delete_prev_backups, search_included
+from ..core.backup.folder import copy_files, create_backup_folder
+from ..core.backup.tar import copy_tar_files
 from ..core.logging import logger
 from ..core.const import ERROR_TYPES
 
