@@ -8,7 +8,7 @@ from tkinter.ttk import Button, Checkbutton, Label, Progressbar
 
 from .. import __version__
 from ..config import Config_Handler
-from ..core.const import APP_CONFIG_PATH, UPDATE_URL
+from ..core.const import APP_CONFIG_PATH, ERROR_TYPES, UPDATE_URL
 from .backup_thread import BackupThread
 from .simpledialog_extra import ask_combobox
 
@@ -349,7 +349,7 @@ class TkApp(Tk):
                 self.__included_folders, self.__excluded_folders,
                 self.__backup_location, self.__versions_to_keep,
                 self.progress_find_incr, self.progress_copy_incr,
-                self.__use_tar_var.get()
+                self.handle_error_message, self.__use_tar_var.get()
                 )
             # start the background backup thread so GUI wont appear frozen
             self.__thread.start()
@@ -369,6 +369,19 @@ It is licenced under GPL-3.0""")
         open the default webbrowser to the update url
         """
         webbrowser.open(UPDATE_URL)
+
+    def handle_error_message(self, error_type: ERROR_TYPES):
+        self.__statusbar.config(text="Failed")
+        if error_type is ERROR_TYPES.NO_BACKUP_WRITE_PERMISION:
+            messagebox.showerror("No Write Permission", ERROR_TYPES.NO_BACKUP_WRITE_PERMISION.value)
+        elif error_type is ERROR_TYPES.NO_BACKUP_READ_PERMISION:
+            messagebox.showerror("No Read Permission", ERROR_TYPES.NO_BACKUP_READ_PERMISION.value)
+        elif error_type is ERROR_TYPES.NO_FILES_FOUND_TO_BACKUP:
+            messagebox.showerror("No Files Found", ERROR_TYPES.NO_FILES_FOUND_TO_BACKUP.value)
+        elif error_type is ERROR_TYPES.NO_BACKUP_PATH_FOUND:
+            messagebox.showerror("No Backup Path Found", ERROR_TYPES.NO_BACKUP_PATH_FOUND.value)
+        self.__progress.config(mode="determinate")
+        self.enable_gui()
 
     def _layout(self):
         self.config(menu=self.__menu)

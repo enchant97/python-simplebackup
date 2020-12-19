@@ -7,7 +7,7 @@ import re
 import shutil
 from pathlib import Path
 
-from ..core.const import BACKUP_DATESTAMP_UTC_REG, SYSTEM_FILES
+from ..core.const import BACKUP_DATESTAMP_UTC_REG, ERROR_TYPES, SYSTEM_FILES
 from ..core.logging import logger
 
 
@@ -57,7 +57,6 @@ def search_included(paths_to_scan: tuple, paths_to_exclude: tuple, callback_prog
                         if callback_progress:
                             # call progress callback to say file has been found
                             callback_progress()
-    logger.debug("Finished finding files")
     if callback_progress:
         callback_progress(True)
     return found_paths
@@ -78,38 +77,58 @@ def find_prev_backups(root_backup_path: Path, name_re=BACKUP_DATESTAMP_UTC_REG):
             logger.debug("Searching found a previous backup: \"%s\"", path)
             yield path
 
-def delete_prev_backups(root_backup_path: Path, versions_to_keep=2) -> int:
+
+def delete_prev_backups(root_backup_path: Path, versions_to_keep=2, error_callback=None) -> int:
     """
     deletes older backups keeping the amount of versions given
 
         :param root_backup_path: root path of all backups
         :param versions_to_keep: versions to keep, defaults to 2
-        :return: the number of backups deleted
+        :param error_callback: the func to call when something
+                               goes wrong, needs to accept
+                               ERROR_TYPES as a param
+        :return: the number of backups deleted, -1 if failed
     """
     if versions_to_keep < 0:
         # make sure we dont have negative numbers
         versions_to_keep = 0
     backups_deleted = 0
-    prev_backups = [i for i in find_prev_backups(root_backup_path)]
-    if (versions_to_keep >= 0) and (len(prev_backups) >= versions_to_keep):
-        prev_backups = sorted(prev_backups, reverse=True)
-        logger.debug("Sorted previous backups: \"%s\"", prev_backups)
-        difference = len(prev_backups) - versions_to_keep
-        logger.debug("Difference of previous backups: \"%s\"", difference)
-        for i in range(difference):
-            try:
-                curr_backup_path = prev_backups[i - 1]
-                if curr_backup_path.is_dir():
-                    logger.debug("Deleting a folder backup: \"%s\"", curr_backup_path)
-                    # removes folder backups
-                    shutil.rmtree(curr_backup_path)
-                else:
-                    logger.debug("Deleting a tar backup: \"%s\"", curr_backup_path)
-                    # removes file backups
-                    os.remove(curr_backup_path)
-                backups_deleted += 1
-            except FileNotFoundError:
-                # we don't need to do anything as we were trying to delete anyway
-                pass
-    logger.debug("Finished deleting backups")
+    try:
+        prev_backups = [i for i in find_prev_backups(root_backup_path)]
+    except PermissionError:
+        backups_deleted = -1
+        logger.exception(ERROR_TYPES.NO_BACKUP_READ_PERMISION.value)
+        if error_callback:
+            error_callback(ERROR_TYPES.NO_BACKUP_READ_PERMISION)
+    except FileNotFoundError:
+        backups_deleted = -1
+        logger.exception(ERROR_TYPES.NO_BACKUP_PATH_FOUND.value)
+        if error_callback:
+            error_callback(ERROR_TYPES.NO_BACKUP_PATH_FOUND)
+    else:
+        if (versions_to_keep >= 0) and (len(prev_backups) >= versions_to_keep):
+            prev_backups = sorted(prev_backups, reverse=True)
+            logger.debug("Sorted previous backups: \"%s\"", prev_backups)
+            difference = len(prev_backups) - versions_to_keep
+            logger.debug("Difference of previous backups: \"%s\"", difference)
+            for i in range(difference):
+                try:
+                    curr_backup_path = prev_backups[i - 1]
+                    if curr_backup_path.is_dir():
+                        logger.debug("Deleting a folder backup: \"%s\"", curr_backup_path)
+                        # removes folder backups
+                        shutil.rmtree(curr_backup_path)
+                    else:
+                        logger.debug("Deleting a tar backup: \"%s\"", curr_backup_path)
+                        # removes file backups
+                        os.remove(curr_backup_path)
+                    backups_deleted += 1
+                except FileNotFoundError:
+                    # we don't need to do anything as we were trying to delete anyway
+                    pass
+                except PermissionError:
+                    backups_deleted = -1
+                    logger.exception(ERROR_TYPES.NO_BACKUP_WRITE_PERMISION.value)
+                    if error_callback:
+                        error_callback(ERROR_TYPES.NO_BACKUP_WRITE_PERMISION)
     return backups_deleted

@@ -1,3 +1,5 @@
+from enum import Enum
+
 from .. import MODULE_PATH
 
 SYSTEM_FILES = ("Thumbs.db", "thumbs.db", ".DS_Store")
@@ -23,3 +25,14 @@ BASE_CONF_FILE = {
     "default-conf-i": 0,
     "configs": []
 }
+
+
+class ERROR_TYPES(str, Enum):
+    """
+    contains error types for
+    use in a error_callback
+    """
+    NO_BACKUP_WRITE_PERMISION = "Backup location has no write permissions!"
+    NO_BACKUP_READ_PERMISION = "Backup location has no read permissions!"
+    NO_FILES_FOUND_TO_BACKUP = "No files were found to backup!"
+    NO_BACKUP_PATH_FOUND = "Backup location does not seem to exist!"

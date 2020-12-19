@@ -8,7 +8,7 @@ from datetime import datetime
 from functools import partial
 from pathlib import Path
 
-from ..core.const import BACKUP_DATESTAMP_UTC
+from ..core.const import BACKUP_DATESTAMP_UTC, ERROR_TYPES
 from ..core.logging import logger
 
 
@@ -66,14 +66,22 @@ def copy_files(backup_folder: Path, file_paths, callback_progress=None):
             )
     logger.debug("Finished files copy")
 
-def create_backup_folder(root_backup_path: Path):
+def create_backup_folder(root_backup_path: Path, error_callback=None):
     """
     creates the dated backup folder
 
         :param root_backup_path: the root backup path
+        :param error_callback: the func to call when something
+                               goes wrong, needs to accept
+                               ERROR_TYPES as a param
         :return: the path a backup should be used for all backup files
     """
     backup_path = root_backup_path / datetime.utcnow().strftime(BACKUP_DATESTAMP_UTC)
-    backup_path.mkdir(parents=True, exist_ok=True)
-    logger.debug("Created backup folder: \"%s\"", backup_path)
-    return backup_path
+    try:
+        backup_path.mkdir(parents=True, exist_ok=True)
+        logger.debug("Created backup folder: \"%s\"", backup_path)
+        return backup_path
+    except PermissionError:
+        logger.exception(ERROR_TYPES.NO_BACKUP_WRITE_PERMISION.value)
+        if error_callback:
+            error_callback(ERROR_TYPES.NO_BACKUP_WRITE_PERMISION)
