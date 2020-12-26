@@ -122,6 +122,15 @@ class Config_Handler:
         else:
             raise ValueError("Invalid config index")
 
+    @property
+    def show_help(self) -> bool:
+        return self.__config["show-help"]
+
+    @show_help.setter
+    def show_help(self, new_val: bool):
+        self.__config["show-help"] = bool(new_val)
+        self.__write()
+
     def set_included_folders(self, config_i: int, locations: list):
         """
         sets the included folders

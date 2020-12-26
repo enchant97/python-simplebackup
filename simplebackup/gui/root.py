@@ -74,6 +74,9 @@ class TkApp(Tk):
         self._load_display()
         self._layout()
 
+        if self.__app_config.show_help:
+            self.show_help_popup()
+
     def on_closing(self):
         """
         called on window close
@@ -173,7 +176,7 @@ class TkApp(Tk):
         update the number of versions to keep,
         asks the user for a integer
         """
-        new_val = simpledialog.askinteger("Versions To Keep", "How many backups do you want to keep")
+        new_val = simpledialog.askinteger("Versions To Keep", "How many backups do you want to keep", minvalue=0)
         if new_val != self.__versions_to_keep and new_val != None:
             self.__versions_to_keep = new_val
             self.__app_config.set_versions_to_keep(self.__curr_config, self.__versions_to_keep)
@@ -369,6 +372,23 @@ It is licenced under GPL-3.0""")
         open the default webbrowser to the update url
         """
         webbrowser.open(UPDATE_URL)
+
+    def show_help_popup(self):
+        messagebox.showinfo("Welcome", """Welcome to simplebackup, here is some help to get you started:
+\nIncluding a folder to backup
+    - Press the 'Include Folder' button to add a folder to backup
+    - Remove a entry by clicking on the list below
+\nExcluding a folder from the backup
+    - Press the 'Exclude Folder' button to skip a folder to backup
+    - Remove a entry by clicking on the list below
+\nSetting where backups are stored
+    - Click the 'Backup Folder' button to set where backups should be placed
+\nMultiple backup configs
+    Use the 'Config' button in the titlebar to change varius settings like creating a new config
+\nVersions to keep
+    This will be the number of backup to keep in the backup folder
+""")
+        self.__app_config.show_help = False
 
     def handle_error_message(self, error_type: ERROR_TYPES):
         self.__statusbar.config(text="Failed")

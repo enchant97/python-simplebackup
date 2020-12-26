@@ -23,6 +23,7 @@ BASE_CONF = {
 # the base for the config file that contains all the backup configs
 BASE_CONF_FILE = {
     "default-conf-i": 0,
+    "show-help": True,
     "configs": []
 }
 
