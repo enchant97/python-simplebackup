@@ -8,8 +8,8 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from .core.const import (BASE_CONF, BASE_CONF_FILE, HUMAN_READABLE_TIMESTAMP,
-                         UTC_TIMESTAMP)
+from .const import (BASE_CONF, BASE_CONF_FILE, HUMAN_READABLE_TIMESTAMP,
+                    UTC_TIMESTAMP)
 
 
 class Config_Handler:
