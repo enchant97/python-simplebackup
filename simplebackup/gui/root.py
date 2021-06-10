@@ -7,8 +7,8 @@ from tkinter import (BOTTOM, DISABLED, END, NORMAL, SUNKEN, BooleanVar,
 from tkinter.ttk import Button, Checkbutton, Label, Progressbar
 
 from .. import __version__
-from ..core.config import Config_Handler
-from ..core.const import APP_CONFIG_PATH, ERROR_TYPES, UPDATE_URL
+from ..core.config import Config_Handler, user_config_filepath
+from ..core.const import ERROR_TYPES, UPDATE_URL
 from .backup_thread import BackupThread
 from .simpledialog_extra import ask_combobox
 
@@ -27,7 +27,7 @@ class TkApp(Tk):
         self.__files_found = 0
         self.__files_copied = 0
 
-        config_fn = kwargs.get("config_fn", APP_CONFIG_PATH)
+        config_fn = kwargs.get("config_fn", user_config_filepath())
         self.__app_config = Config_Handler(config_fn)
         self.__curr_config = self.__app_config.default_config_i
 

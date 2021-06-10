@@ -9,7 +9,18 @@ from datetime import datetime
 from pathlib import Path
 
 from .const import (BASE_CONF, BASE_CONF_FILE, HUMAN_READABLE_TIMESTAMP,
-                    UTC_TIMESTAMP)
+                    USER_HOME_PATH, UTC_TIMESTAMP)
+
+
+def user_config_filepath() -> Path:
+    """
+    get and create the config path
+
+        :return: the config path with filename
+    """
+    the_path = USER_HOME_PATH.joinpath(".config", "simple-backup")
+    the_path.mkdir(parents=True, exist_ok=True)
+    return the_path.joinpath("config.json")
 
 
 class Config_Handler:

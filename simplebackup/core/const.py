@@ -1,14 +1,12 @@
 from enum import Enum
+from pathlib import Path
 
-from .. import MODULE_PATH
-
+USER_HOME_PATH = Path.home()
 SYSTEM_FILES = ("Thumbs.db", "thumbs.db", ".DS_Store")
 HUMAN_READABLE_TIMESTAMP = "%Y-%m-%d %H.%M.%S"
 UTC_TIMESTAMP = "%Y-%m-%dT%H.%M.%SZ"
 BACKUP_DATESTAMP_UTC = f"BACKUP {UTC_TIMESTAMP}"
 BACKUP_DATESTAMP_UTC_REG = r"^BACKUP ([0-9]{4})(-)?(1[0-2]|0[1-9])(?(2)-)(3[0-1]|0[1-9]|[1-2][0-9])T(2[0-3]|[01]?[0-9]).?([0-5]?[0-9]).?([0-5]?[0-9])Z"
-APP_CONFIG_PATH = MODULE_PATH / "app_config.json"
-LOGGING_PATH = MODULE_PATH / "simplebackup.log"
 UPDATE_URL = "https://github.com/enchant97/python-simplebackup/releases"
 # what each backup config uses as a base
 BASE_CONF = {

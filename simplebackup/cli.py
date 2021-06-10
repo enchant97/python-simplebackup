@@ -2,11 +2,10 @@ from datetime import datetime
 from pathlib import Path
 
 from . import __version__
-from .core.config import Config_Handler
-from .core.backup.search import delete_prev_backups, search_included
-from .core.const import APP_CONFIG_PATH
 from .core.backup.folder import copy_files, create_backup_folder
+from .core.backup.search import delete_prev_backups, search_included
 from .core.backup.tar import copy_tar_files
+from .core.config import Config_Handler, user_config_filepath
 
 
 class CLI:
@@ -17,7 +16,7 @@ class CLI:
         self.__files_found = 0
         self.__files_backed_up = 0
 
-        config_fn = kwargs.get("config_fn", APP_CONFIG_PATH)
+        config_fn = kwargs.get("config_fn", user_config_filepath())
         self.__app_config = Config_Handler(config_fn)
 
         self.__curr_config = self.__app_config.default_config_i

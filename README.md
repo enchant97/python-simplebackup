@@ -3,7 +3,7 @@ A Python3 app designed to be simple to use and efficient.
 
 ## Notes
 - This app has no **required** dependencies for it to function fully other than python3 and will stay that way.
-- The app configuration file will be created in the simplebackup folder on first run
+- The app configuration file will be created at `$HOME/.config/simple-backup/config.json`
 - Config is shared with both CLI and GUI version
 
 ## How To Run
@@ -12,7 +12,6 @@ A Python3 app designed to be simple to use and efficient.
 - For GUI version run
   - `python3 -m simplebackup gui`
   - or run the `simple-backup.pyw` file
-  - download the exe file for Windows 64bit systems
 
 ## TODO
 - Restore function
